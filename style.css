@@ -393,3 +393,50 @@ input,textarea {
 .btn-cancel:hover {
     background-color: var(--red-dark);
 }
+
+
+/* พื้นหลังมืดๆ เวลา Popup เด้ง */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* ดำโปร่งแสง */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* พื้นหลังมืดๆ เวลา Popup เด้ง */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* ดำโปร่งแสง */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* กล่องข้อความสีเขียว */
+.popup-content {
+    background: var(--green); /* สีเขียวตาม Figma */
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    border: 2px solid #ffffff;
+}
+
+.icon-check img {
+    width: 80px;
+    margin-bottom: 20px;
+}
+

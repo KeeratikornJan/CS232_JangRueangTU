@@ -97,8 +97,8 @@
 
 
             <div class="button-group">
-                <button class="btn-confirm" onclick="submitData()">ยืนยันการส่ง</button>
-                <button class="btn-cancel" onclick="history.back()">ยกเลิก</button>
+                <button type="button" id="btn-confirm-submit" class="btn-confirm">ยืนยันการส่ง</button>
+                <button type="button" class="btn-cancel" onclick="history.back()">ยกเลิก</button>
             </div>
         </div>
     </div>
@@ -108,6 +108,20 @@
             <img src="image/login.png" alt="login-icon">
         </div>
     </footer>
+
+
+    <div id="success-popup" class="popup-overlay" style="display: none;">
+        <div class="popup-content">
+            <div class="icon-check">
+                <img src="image/check-circle.png" alt="success"> 
+            </div>
+            <h2>ส่งคำร้องเรียนเสร็จสิ้น</h2>
+            <p>รหัสคำร้องเรียน : <span id="complaint-id">GU-123456789</span></p>
+            <p class="small">ติดตามสถานะคำร้องของท่านผ่านทาง email</p>
+            <button type="button" id="btn-close-popup" class="btn-confirm">ตกลง</button>
+        </div>
+    </div>
+    
 </body>
 
 </html>

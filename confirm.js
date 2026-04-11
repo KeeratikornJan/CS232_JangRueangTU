@@ -74,6 +74,38 @@ document.addEventListener('DOMContentLoaded', () => {
             if (imgElement) imgElement.style.display = 'none';
         }
 
+        const btnSubmit = document.getElementById('btn-confirm-submit'); // ชื่อ ID ปุ่มยืนยันในหน้า confirm
+        const popup = document.getElementById('success-popup');
+        const btnClose = document.getElementById('btn-close-popup');
+
+        if (btnSubmit) {
+            btnSubmit.addEventListener('click', () => {
+                btnSubmit.addEventListener('click', function () {
+                    // 1. สั่งโชว์ Popup (ต้องมั่นใจว่าใน HTML มี <div id="success-popup"> นะ)
+                    if (popup) {
+                        popup.style.display = 'flex';
+
+                        // 2. สุ่มเลขรหัสคำร้อง
+                        const idSpan = document.getElementById('complaint-id');
+                        if (idSpan) {
+                            idSpan.innerText = "GU-" + Math.floor(Math.random() * 1000000000);
+                        }
+                    } else {
+                        alert("ส่งข้อมูลสำเร็จ!"); // กรณีหา Popup ไม่เจอให้ Alert บอกก่อน
+                        window.location.href = "index.html";
+                    }
+                });
+            });
+        }
+
+        if (btnClose) {
+            btnClose.addEventListener('click', () => {
+                // กดตกลงแล้วให้กลับไปหน้าแรก
+                window.location.href = "index.html";
+            });
+        }
+
+
     } else {
         // ถ้าแอบเข้าหน้านี้โดยไม่มีข้อมูล ให้เด้งกลับหน้าแรก
         alert("ไม่พบข้อมูล กรุณากรอกข้อมูลใหม่อีกครั้ง");
