@@ -6,13 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs.forEach(tab => {
         tab.addEventListener('click', function () {
-            // 1. ลบคลาส active ออกจากทุกปุ่ม
+            // ลบคลาส active ออกจากทุกปุ่ม
             tabs.forEach(t => t.classList.remove('active'));
 
-            // 2. เติมคลาส active ให้ปุ่มที่ถูกกด
+            // เติมคลาส active ให้ปุ่มที่ถูกกด
             this.classList.add('active');
 
-            // 3. เอาชื่อบนปุ่มไปใส่ใน Input ลับ
+            // เอาชื่อบนปุ่มไปใส่ใน Input ลับ
             categoryInput.value = this.innerText;
 
             console.log("หมวดหมู่: ", categoryInput.value);
@@ -28,10 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. ในส่วนการจัดการการส่งฟอร์ม ---
     const form = document.getElementById('complaintForm');
+    // -- ฟังก์ชันเสริม: ใส่ขีดกลางให้เบอร์มือถืออัตโนมัติ (Optional) ---
+    const phoneInput = document.querySelector('input[name="phone"]');
 
     if (form) {
         form.addEventListener('submit', function (e) {
-            // 1. หยุดการส่งแบบปกติ (ห้ามลบ!)
             e.preventDefault();
 
             // 2. ดึงข้อมูลจากฟอร์ม (เขียนรอบเดียวพอครับ)
@@ -85,19 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 3. เช็ควันเวลาที่เกิดเหตุ (สำคัญ!)
+            // เช็ควันเวลาที่เกิดเหตุ (สำคัญ!)
             if (!data.event_time) {
                 alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ");
                 return;
             }
 
-            // 4. เช็คสถานที่เกิดเหตุ
+            // เช็คสถานที่เกิดเหตุ
             if (!data.location) {
                 alert("กรุณาระบุสถานที่เกิดเหตุ");
                 return;
             }
 
-            // 5. เช็ครายละเอียด
+            // เช็ครายละเอียด
             if (!data.details || data.details.trim() === "") {
                 alert("กรุณากรอกรายละเอียดการร้องเรียน");
                 return;
@@ -106,51 +107,43 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("กำลังส่งข้อมูล...", data);
 
             // --- ส่วนท้ายของฟังก์ชัน Submit ---
-         
-        
-                    const proceed = (base64Image = null) => {
-                        const finalData = {
-                            category: document.getElementById('selected-category').value,
-                            firstname: data.firstname,
-                            lastname: data.lastname,
-                            email: data.email,
-                            phone: data.phone,
-                            id_card: data.id_card,
-                            subject: data.subject,
-                            location: data.location,
-                            details: data.details,
-                            event_time: data.event_time,
-                            fileData: base64Image,
-                            fileName: file ? file.name : ""
-                        };
-        
-                        // บันทึกเข้า Session (อันนี้ข้อมูลจะไม่ไปโผล่ที่ URL)
-                        sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
-        
-                        // เปลี่ยนหน้าไปแบบสะอาดๆ
-                        window.location.href = "confirm.html";
-                    };
-        
-                    // --- ส่วนสั่งการให้อ่านไฟล์ ---
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => proceed(event.target.result);
-                        reader.readAsDataURL(file);
-                    } else {
-                        proceed();
-                    }
-                }); 
-            } 
 
-    // -- ฟังก์ชันเสริม: ใส่ขีดกลางให้เบอร์มือถืออัตโนมัติ (Optional) ---
-    const phoneInput = document.querySelector('input[name="phone"]');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function (e) {
-            let value = e.target.value.replace(/\D/g, ''); // ลบตัวอักษรที่ไม่ใช่ตัวเลข
-            if (value.length > 10) value = value.slice(0, 10);
-            e.target.value = value;
+
+            const proceed = (base64Image = null) => {
+                const finalData = {
+                    category: document.getElementById('selected-category').value,
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    email: data.email,
+                    phone: data.phone,
+                    id_card: data.id_card,
+                    subject: data.subject,
+                    location: data.location,
+                    details: data.details,
+                    event_time: data.event_time,
+                    fileData: base64Image,
+                    fileName: file ? file.name : ""
+                };
+
+                // บันทึกเข้า Session (อันนี้ข้อมูลจะไม่ไปโผล่ที่ URL)
+                sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
+
+                // เปลี่ยนหน้าไปแบบสะอาดๆ
+                window.location.href = "confirm.html";
+            };
+
+            // --- ส่วนสั่งการให้อ่านไฟล์ ---
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => proceed(event.target.result);
+                reader.readAsDataURL(file);
+            } else {
+                proceed();
+            }
         });
     }
+
+
 
 
     const fileInput = document.getElementById('file-input');

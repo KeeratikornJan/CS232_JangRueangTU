@@ -59,7 +59,7 @@ nav a {
     border-bottom: 2px solid white;
 }
 
-/* Main Content */
+/* ====== Main Content ======*/
 .container {
     max-width: 800px;
     margin: 20px auto;
@@ -104,7 +104,6 @@ h1 {
     margin-bottom: 25px;
 }
 
-/* Form Cards */
 .form-card {
     background: white;
     border-radius: 15px;
@@ -138,18 +137,14 @@ h1 {
 
 .icon-user {
     width: 20px;
-    /* ปรับขนาดไอคอนตามใจชอบ */
     height: 20px;
     margin-bottom: 5px;
 }
 
 .label-wrapper {
     display: flex;
-    /* สั่งให้ไอคอนกับตัวหนังสือเรียงกันแนวนอน */
     align-items: center;
-    /* จัดให้กึ่งกลางแนวตั้ง */
     gap: 10px;
-    /* ระยะห่างระหว่างรูปกับตัวหนังสือ */
 }
 
 
@@ -159,8 +154,7 @@ label {
     margin-bottom: 5px;
 }
 
-input,
-textarea {
+input,textarea {
     margin-left: 30px;
     width: 90%;
     padding: 10px;
@@ -307,11 +301,7 @@ textarea {
 
 
 
-
-
-
-
-/*หน้า confrim */
+/* =============== หน้า confrim =============== */
 .confirm-container {
     max-width: 800px;
     margin: 20px auto;
@@ -329,6 +319,7 @@ textarea {
 .category-title {
     text-align: center;
     font-size: 18px;
+    margin-bottom: 20px;
 }
 
 .sub-card {
