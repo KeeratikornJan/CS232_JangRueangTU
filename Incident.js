@@ -1,24 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. จัดการปุ่มหมวดหมู่ (Category Tabs) ---
-    const tabs = document.querySelectorAll('.tab');
-    const categoryInput = document.getElementById('selected-category');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function () {
-            // ลบคลาส active ออกจากทุกปุ่ม
-            tabs.forEach(t => t.classList.remove('active'));
-
-            // เติมคลาส active ให้ปุ่มที่ถูกกด
-            this.classList.add('active');
-
-            // เอาชื่อบนปุ่มไปใส่ใน Input ลับ
-            categoryInput.value = this.innerText;
-
-            console.log("หมวดหมู่: ", categoryInput.value);
-        });
-    });
-
     //เช็คอีเมล//
     function validateEmail(email) {
         // สูตร Regex สำหรับเช็คโครงสร้างอีเมล
@@ -109,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const proceed = (base64Image = null) => {
                 const finalData = {
-                    category: document.getElementById('selected-category').value,
+                    category: "เเจ้งเหตุ",
                     firstname: data.firstname,
                     lastname: data.lastname,
                     email: data.email,
@@ -127,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
 
                 // เปลี่ยนหน้าไปแบบสะอาดๆ
-                window.location.href = "confirm.html";
+                window.location.href = "confirmIncident.html";
             };
 
             // --- ส่วนสั่งการให้อ่านไฟล์ ---
@@ -141,31 +122,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
-
-
     const fileInput = document.getElementById('file-input');
-    const previewContainer = document.getElementById('preview-container'); // ตัวแม่ที่ครอบรูป+ปุ่ม
-    const imagePreview = document.getElementById('image-preview');         // ตัวรูป <img>
-    const btnRemoveFile = document.getElementById('btn-remove-file');     // ปุ่มกากบาท
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const btnRemoveFile = document.getElementById('btn-remove-file');
 
-    fileInput.addEventListener('change', function () {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                imagePreview.src = e.target.result;
-
-                // --- บรรทัดสำคัญ: ต้องสั่งให้ Container ที่ซ่อนอยู่แสดงตัวออกมา ---
-                previewContainer.style.display = 'inline-block';
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result; // เอาข้อมูลรูปใส่ในแท็ก img
+                    previewContainer.style.display = 'inline-block'; // สั่งให้ Container แสดงตัว
+                };
+                reader.readAsDataURL(file);
             }
-            reader.readAsDataURL(file);
-        }
-    });
+        });
+    }
 
-    // ส่วนปุ่มกากบาท
-    btnRemoveFile.addEventListener('click', function () {
-        fileInput.value = ""; // ล้างค่าไฟล์
-        previewContainer.style.display = 'none'; // สั่งซ่อนกลับไปเหมือนเดิม
-    });
+    // ปุ่มลบรูป (ถ้ากด X ให้ล้างค่า)
+    if (btnRemoveFile) {
+        btnRemoveFile.addEventListener('click', () => {
+            fileInput.value = ""; // ล้างไฟล์ใน input
+            previewContainer.style.display = 'none'; // ซ่อน Preview
+            imagePreview.src = "";
+        });
+    }
 });
+
+
+
