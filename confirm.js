@@ -79,22 +79,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnClose = document.getElementById('btn-close-popup');
 
         if (btnSubmit) {
-            btnSubmit.addEventListener('click', () => {
-                btnSubmit.addEventListener('click', function () {
-                    // 1. สั่งโชว์ Popup (ต้องมั่นใจว่าใน HTML มี <div id="success-popup"> นะ)
-                    if (popup) {
-                        popup.style.display = 'flex';
-
-                        // 2. สุ่มเลขรหัสคำร้อง
-                        const idSpan = document.getElementById('complaint-id');
-                        if (idSpan) {
-                            idSpan.innerText = "GU-" + Math.floor(Math.random() * 1000000000);
-                        }
-                    } else {
-                        alert("ส่งข้อมูลสำเร็จ!"); // กรณีหา Popup ไม่เจอให้ Alert บอกก่อน
-                        window.location.href = "index.html";
+            btnSubmit.addEventListener('click', function (e) {
+                e.preventDefault();
+                // 1. สั่งโชว์ Popup (ต้องมั่นใจว่าใน HTML มี <div id="success-popup"> นะ)
+                if (popup) {
+                    popup.classList.add('show')
+                    // 2. สุ่มเลขรหัสคำร้อง
+                    const idSpan = document.getElementById('complaint-id');
+                    if (idSpan) {
+                        idSpan.innerText = "GU-" + Math.floor(Math.random() * 1000000000);
                     }
-                });
+                } else {
+                    alert("ส่งข้อมูลสำเร็จ!"); // กรณีหา Popup ไม่เจอให้ Alert บอกก่อน
+                    window.location.href = "index.html";
+                }
             });
         }
 
@@ -111,4 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("ไม่พบข้อมูล กรุณากรอกข้อมูลใหม่อีกครั้ง");
         window.location.href = "index.html";
     }
+
+
 });

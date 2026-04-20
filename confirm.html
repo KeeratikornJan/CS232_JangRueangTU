@@ -10,7 +10,6 @@
 </head>
 
 <body>
-    <script src="confirm.js"></script>
     <header class="navbar">
         <div class="logo">
             <img src="image/LOGO.png" alt="logo">
@@ -110,18 +109,18 @@
     </footer>
 
 
-    <div id="success-popup" class="popup-overlay" style="display: none;">
+    <div id="success-popup" class="popup-overlay" >
         <div class="popup-content">
             <div class="icon-check">
                 <img src="image/check-circle.png" alt="success"> 
             </div>
             <h2>ส่งคำร้องเรียนเสร็จสิ้น</h2>
-            <p>รหัสคำร้องเรียน : <span id="complaint-id">GU-123456789</span></p>
+            <p>รหัสคำร้องเรียน : <span id="complaint-id"></span></p>
             <p class="small">ติดตามสถานะคำร้องของท่านผ่านทาง email</p>
             <button type="button" id="btn-close-popup" class="btn-confirm">ตกลง</button>
         </div>
     </div>
-    
+    <script src="confirm.js"></script>
 </body>
 
 </html>

@@ -398,26 +398,12 @@ input,textarea {
 /* พื้นหลังมืดๆ เวลา Popup เด้ง */
 .popup-overlay {
     position: fixed;
+    display: none;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5); /* ดำโปร่งแสง */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-/* พื้นหลังมืดๆ เวลา Popup เด้ง */
-.popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* ดำโปร่งแสง */
-    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -435,10 +421,15 @@ input,textarea {
     border: 2px solid #ffffff;
 }
 
+.popup-overlay.show {
+  display: flex; 
+}
+
 .icon-check img {
     width: 80px;
     margin-bottom: 20px;
 }
+
 /*---------------------------------Admin-------------------------------------*/
 /*-------------------------------dashboard-----------------------------------*/
 /*---------------------------------------------------------------------------*/
