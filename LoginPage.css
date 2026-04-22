@@ -89,6 +89,13 @@ body {
 /* ────────────────────────────────────────────────────────────
    4. Layout – Login Panel (Left)
 ──────────────────────────────────────────────────────────── */
+.LoginLogo {
+  display: block;
+  width: 340px;
+  margin: 0 auto 16px;
+  margin-bottom: 100px;
+}
+
 .login-panel {
   flex: 0 0 520px;
   display: flex;
@@ -99,7 +106,6 @@ body {
   padding: 60px var(--space-xl);
   position: relative;
   z-index: 2;
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   box-shadow: var(--shadow-panel);
   animation: slideIn var(--transition-spring) both;
 }
@@ -110,11 +116,12 @@ body {
 }
 
 .login-panel__heading {
-  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: var(--space-lg);
-  letter-spacing: -0.3px;
+  margin-bottom: 40px;
 }
 
 
@@ -248,8 +255,8 @@ body {
    7. Submit Button
 ──────────────────────────────────────────────────────────── */
 .btn-login {
-    display: flex;
-  width: 340px;
+  display: flex;
+  width: 100%;   /* แก้จาก 340px */
   padding: 13px;
   background: var(--color-primary);
   color: var(--color-white);
