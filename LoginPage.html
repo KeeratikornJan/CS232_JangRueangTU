@@ -25,7 +25,14 @@
   <main class="login-panel" role="main">
     <div class="login-panel__form-wrap">
 
-      <h1 class="login-panel__heading">ยินดีต้อนรับ</h1>
+        <a href="index.html">
+            <img class="LoginLogo"
+            src="image/JangruengBlueLogo.png" 
+            alt="JangruengBlueLogo" width="400px">
+        </a>
+        
+
+      <h1 class="login-panel__heading">ลงชื่อเข้าใช้</h1>
 
       <form class="login-form" id="loginForm" novalidate>
 
@@ -112,7 +119,12 @@
         </div>
 
         <!-- Submit -->
-        <button class="btn-login" type="submit">เข้าสู่ระบบ</button>
+         <a class="btn-login" 
+         href="dashboardAdmin.html"
+         style="text-decoration: none;">
+         เข้าสู่ระบบ
+        </a>
+
 
       </form>
     </div>
@@ -124,31 +136,10 @@
   <aside class="hero-panel" aria-label="JANGRUEANG TU branding">
     <img
       class="hero-panel__bg"
-      src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1400&q=80"
+      src="image/library.png"
       alt="ห้องสมุดมหาวิทยาลัยธรรมศาสตร์"
       loading="lazy"
     />
-
-    <div class="brand" role="img" aria-label="JANGRUEANG TU – ร้องเรียน แจ้งเหตุ ในมหาวิทยาลัยธรรมศาสตร์">
-      <div class="brand__inner">
-        <div class="brand__icon" aria-hidden="true">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-               stroke="white" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </div>
-        <div class="brand__text">
-          <p class="brand__name">JANGRUEANG <span class="brand__name--accent">TU</span></p>
-          <p class="brand__tagline">
-            ร้องเรียน แจ้งเหตุ
-            <strong class="brand__tagline--bold">ในมหาวิทยาลัยธรรมศาสตร์</strong>
-          </p>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <!-- Script -->

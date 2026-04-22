@@ -248,14 +248,16 @@ body {
    7. Submit Button
 ──────────────────────────────────────────────────────────── */
 .btn-login {
-  width: 100%;
+    display: flex;
+  width: 340px;
   padding: 13px;
   background: var(--color-primary);
   color: var(--color-white);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 50px;
   font-size: 15px;
   font-weight: 600;
+  justify-content: center;
   font-family: inherit;
   cursor: pointer;
   letter-spacing: 0.3px;
@@ -264,6 +266,18 @@ body {
     background  var(--transition-fast),
     box-shadow  var(--transition-fast),
     transform   0.1s ease;
+}
+
+/* ซ่อน native password toggle ของ Chrome/Edge */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none;
+  pointer-events: none;
 }
 
 .btn-login:hover {
@@ -311,64 +325,6 @@ body {
     transparent 100%
   );
 }
-
-
-/* ────────────────────────────────────────────────────────────
-   9. Brand Badge
-──────────────────────────────────────────────────────────── */
-.brand {
-  position: absolute;
-  bottom: var(--space-xl);
-  left: var(--space-xl);
-  z-index: 3;
-  animation: riseUp 0.8s 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.brand__inner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.brand__icon {
-  width: 52px;
-  height: 52px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-  flex-shrink: 0;
-}
-
-.brand__name {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--color-white);
-  letter-spacing: 1px;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.brand__name--accent {
-  color: var(--color-accent-red);
-}
-
-.brand__tagline {
-  font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.75);
-  margin-top: 5px;
-  font-weight: 400;
-  letter-spacing: 0.2px;
-}
-
-.brand__tagline--bold {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
-}
-
 
 /* ────────────────────────────────────────────────────────────
    10. Responsive – Mobile

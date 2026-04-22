@@ -15,11 +15,10 @@ function initPasswordToggle() {
   toggleBtn.addEventListener('click', () => {
     const isVisible = toggleBtn.getAttribute('aria-pressed') === 'true';
 
-    // Flip state
+
     const nextVisible = !isVisible;
     passwordInput.type = nextVisible ? 'text' : 'password';
 
-    // Update ARIA for screen readers
     toggleBtn.setAttribute('aria-pressed', String(nextVisible));
     toggleBtn.setAttribute('aria-label', nextVisible ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
   });
