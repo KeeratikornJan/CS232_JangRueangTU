@@ -7,14 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function initPasswordToggle() {
-  const toggleBtn  = document.getElementById('togglePwBtn');
+  const toggleBtn     = document.getElementById('togglePwBtn');
   const passwordInput = document.getElementById('password');
 
   if (!toggleBtn || !passwordInput) return;
 
   toggleBtn.addEventListener('click', () => {
     const isVisible = toggleBtn.getAttribute('aria-pressed') === 'true';
-
 
     const nextVisible = !isVisible;
     passwordInput.type = nextVisible ? 'text' : 'password';
@@ -32,17 +31,23 @@ function initFormValidation() {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
-    const username = form.elements['username'].value.trim();
+    const email    = form.elements['email'].value.trim();
     const password = form.elements['password'].value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!username || !password) {
-      showError(form, 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+    if (!email || !password) {
+      showError(form, 'กรุณากรอกอีเมลและรหัสผ่าน');
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      showError(form, 'รูปแบบอีเมลไม่ถูกต้อง');
       return;
     }
 
     clearError(form);
 
-    console.log('Submitting login for:', username);
+    console.log('Submitting login for:', email);
   });
 }
 
@@ -65,6 +70,7 @@ function showError(form, message) {
 
   errorEl.textContent = message;
 }
+
 
 function clearError(form) {
   const errorEl = form.querySelector('.login-form__error');
