@@ -4,27 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jangrueang TU - ตรวจสอบข้อมูลการแจ้งเหตุ</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Jangrueang TU - ตรวจสอบข้อมูลการร้องเรียน</title>
+    <link rel="stylesheet" href="../css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <header class="navbar">
         <div class="logo">
-            <img src="image/LOGO.png" alt="logo">
+            <img src="../image/LOGO.png" alt="logo">
         </div>
         <nav>
-            <div class="nav-item ">
-                <a href="index.html">
-                    <img src="image/complaintpage.png" alt="icon" class="nav-icon">
+            <div class="nav-item active">
+                <a href="../index.html">
+                    <img src="../image/complaintpage.png" alt="icon" class="nav-icon">
                     <span>ร้องเรียน</span>
                 </a>
             </div>
 
-            <div class="nav-item active">
+            <div class="nav-item">
                 <a href="Incident.html">
-                    <img src="image/informpage.png" alt="icon" class="nav-icon">
+                    <img src="../image/informpage.png" alt="icon" class="nav-icon">
                     <span>แจ้งเหตุ</span>
                 </a>
             </div>
@@ -33,42 +33,46 @@
 
     <div class="confirm-container">
         <header class="confirm-header">
-            <h1>ตรวจสอบข้อมูลการแจ้งเหตุ</h1>
-            <p>*กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนส่งเรื่องแจ้งเหตุ</p>
+            <h1>ตรวจสอบข้อมูลการร้องเรียน</h1>
+            <p>*กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนส่งเรื่องคำร้องเรียน</p>
         </header>
 
         <div class="main-card">
+            <div class="category-title">
+                <strong >หมวดหมู่การร้องเรียน : </strong>
+                <span id="view-category"></span>
+            </div>
             <div class="sub-card">
-                <h3>ข้อมูลผู้แจ้งเหตุ</h3>
+                <h3>ข้อมูลผู้ร้องเรียน</h3>
                 <hr>
                 <div class="info-grid">
                     <div class="info-item">
-                        <img src="image/person.png" alt="icon-user" class="icon-user">
+                        <img src="../image/person.png" alt="icon-user" class="icon-user">
                         <strong>ชื่อ-นามสกุล :</strong>
                         <span id="view-name"></span>
                     </div>
 
                     <div class="info-item">
-                        <img src="image/mail.png" alt="icon-email" class="icon-user">
+                        <img src="../image/mail.png" alt="icon-email" class="icon-user">
                         <strong>อีเมล :</strong> <span id="view-email"></span>
                     </div>
                     <div class="info-item">
-                        <img src="image/Phone.png" alt="icon-phone" class="icon-user">
+                        <img src="../image/Phone.png" alt="icon-phone" class="icon-user">
                         <strong>เบอร์มือถือ :</strong> <span id="view-phone"></span>
                     </div>
                     <div class="info-item">
-                        <img src="image/card.png" alt="icon-card" class="icon-user">
+                        <img src="../image/card.png" alt="icon-card" class="icon-user">
                         <strong>หมายเลขบัตรประชาชน :</strong> <span id="view-id-card"></span>
                     </div>
                 </div>
             </div>
 
             <div class="sub-card">
-                <h3>ข้อมูลเรื่องแจ้งเหตุ</h3>
+                <h3>ข้อมูลเรื่องร้องเรียน </h3>
                 <hr>
                 <div class="complaint-details">
                     <div class="complaint-item">
-                        <p><strong>หัวข้อแจ้งเหตุ: </strong> <span id="view-subject"></span></p>
+                        <p><strong>หัวข้อร้องเรียน : </strong> <span id="view-subject"></span></p>
                     </div>
                     <div class="complaint-item">
                         <p><strong>วัน เวลา ที่เกิดเหตุ : </strong> <span id="view-datetime"></span></p>
@@ -100,7 +104,7 @@
 
     <footer class="bottom-bar">
         <div class="user-icon">
-            <img src="image/login.png" alt="login-icon">
+            <img src="../image/login.png" alt="login-icon">
         </div>
     </footer>
 
@@ -108,15 +112,15 @@
     <div id="success-popup" class="popup-overlay" >
         <div class="popup-content">
             <div class="icon-check">
-                <img src="image/check-circle.png" alt="success"> 
+                <img src="../image/check-circle.png" alt="success"> 
             </div>
-            <h2>ส่งเรื่องแจ้งเหตุเสร็จสิ้น</h2>
-            <p>รหัสเรื่องแจ้งเหตุ : <span id="complaint-id"> </span></p>
-            <p class="small">ติดตามสถานะเรื่องแจ้งเหตุของท่านผ่านทาง email</p>
+            <h2>ส่งคำร้องเรียนเสร็จสิ้น</h2>
+            <p>รหัสคำร้องเรียน : <span id="complaint-id"></span></p>
+            <p class="small">ติดตามสถานะคำร้องของท่านผ่านทาง email</p>
             <button type="button" id="btn-close-popup" class="btn-confirm">ตกลง</button>
         </div>
     </div>
-    <script src="confirmIncident.js"></script>
+    <script src="../js/confirm.js"></script>
 </body>
 
 </html>

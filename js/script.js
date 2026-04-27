@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
 
                 // เปลี่ยนหน้าไปแบบสะอาดๆ
-                window.location.href = "confirm.html";
+                window.location.href = "views/confirm.html";
             };
 
             // --- ส่วนสั่งการให้อ่านไฟล์ ---

@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     alert("ส่งข้อมูลสำเร็จ!"); // กรณีหา Popup ไม่เจอให้ Alert บอกก่อน
-                    window.location.href = "index.html";
+                    window.location.href = "../index.html";
                 }
             });
         }
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnClose) {
             btnClose.addEventListener('click', () => {
                 // กดตกลงแล้วให้กลับไปหน้าแรก
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
             });
         }
 
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         // ถ้าแอบเข้าหน้านี้โดยไม่มีข้อมูล ให้เด้งกลับหน้าแรก
         alert("ไม่พบข้อมูล กรุณากรอกข้อมูลใหม่อีกครั้ง");
-        window.location.href = "index.html";
+        window.location.href = "../index.html";
     }
 
 
