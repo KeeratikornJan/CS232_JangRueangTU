@@ -3,73 +3,76 @@ import boto3
 import uuid
 from datetime import datetime
 
-# เชื่อมต่อ DynamoDB (เรียกไว้นอก Handler เพื่อความเร็วในการรันครั้งต่อไป)
+# เชื่อมต่อ DynamoDB
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('Complaints')
+table = dynamodb.Table('CS232ProjectData')
 
 def lambda_handler(event, context):
-    # 1. จัดการเรื่อง CORS (เพื่อให้ Browser ยอมรับ)
+    # 1. ตั้งค่า CORS (เพิ่ม GET เข้าไปใน Methods)
     headers = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization" # เพิ่ม Authorization สำหรับ Cognito
     }
     
-    # ถ้าเป็นคำขอแบบ OPTIONS (Pre-flight) ให้ตอบกลับทันที
-    if event.get('httpMethod') == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps('OK')
-        }
+    method = event.get('httpMethod')
 
-    try:
-        # 2. รับข้อมูลจาก Body (API Gateway ส่งมาเป็น String ต้องแปลงเป็น Dict)
-        if event.get('body'):
-            data = json.loads(event['body'])
-        else:
+    # จัดการ OPTIONS (Pre-flight)
+    if method == 'OPTIONS':
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps('OK')}
+
+    # ----------------------------------------------------
+    # ส่วนของ ADMIN: ดึงข้อมูล (GET)
+    # ----------------------------------------------------
+    if method == 'GET':
+        try:
+            # ดึงข้อมูลทั้งหมดจาก DynamoDB
+            response = table.scan()
+            items = response.get('Items', [])
+            
             return {
-                'statusCode': 400,
+                'statusCode': 200,
                 'headers': headers,
-                'body': json.dumps({'message': 'ไม่มีข้อมูลส่งมา'})
+                'body': json.dumps(items)
+            }
+        except Exception as e:
+            return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
+
+    # ----------------------------------------------------
+    # ส่วนของ USER: บันทึกข้อมูล (POST)
+    # ----------------------------------------------------
+    elif method == 'POST':
+        try:
+            if not event.get('body'):
+                return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'message': 'ไม่มีข้อมูล'})}
+
+            data = json.loads(event['body'])
+            complaint_id = str(uuid.uuid4())
+            
+            item = {
+                'complaint_id': complaint_id,
+                'timestamp': datetime.now().isoformat(),
+                'category': data.get('category'),
+                'firstname': data.get('firstname'),
+                'lastname': data.get('lastname'),
+                'email': data.get('email'),
+                'phone': data.get('phone'),
+                'id_card': data.get('id_card'),
+                'subject': data.get('subject'),
+                'location': data.get('location'),
+                'details': data.get('details'),
+                'event_time': data.get('event_time'),
+                'fileName': data.get('fileName'),
+                'fileData': data.get('fileData')
             }
 
-        # 3. เตรียมข้อมูลบันทึกลง DynamoDB
-        complaint_id = str(uuid.uuid4())
-        item = {
-            'complaint_id': complaint_id,
-            'timestamp': datetime.now().isoformat(),
-            'category': data.get('category'),
-            'firstname': data.get('firstname'),
-            'lastname': data.get('lastname'),
-            'email': data.get('email'),
-            'phone': data.get('phone'),
-            'id_card': data.get('id_card'),
-            'subject': data.get('subject'),
-            'location': data.get('location'),
-            'details': data.get('details'),
-            'event_time': data.get('event_time'),
-            'fileName': data.get('fileName'),
-            'fileData': data.get('fileData') # เก็บ Base64
-        }
+            table.put_item(Item=item)
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'status': 'success', 'id': complaint_id})
+            }
+        except Exception as e:
+            return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': 'Internal Error'})}
 
-        # 4. บันทึกลงตาราง
-        table.put_item(Item=item)
-
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                'status': 'success',
-                'message': 'บันทึกข้อมูลเรียบร้อย',
-                'id': complaint_id
-            })
-        }
-
-    except Exception as e:
-        print(f"Error: {str(e)}") # เก็บ Log ไว้ดูใน CloudWatch
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'body': json.dumps({'error': 'เกิดข้อผิดพลาดภายในระบบ'})
-        }
+    return {'statusCode': 405, 'headers': headers, 'body': json.dumps({'message': 'Method Not Allowed'})}
