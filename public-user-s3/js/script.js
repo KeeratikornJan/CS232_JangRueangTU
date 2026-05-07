@@ -76,15 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     location: data.location,
                     details: data.details,
                     event_time: data.event_time,
-                    image: base64Image, // ใช้คำว่า image เพื่อให้ตรงกับโค้ด Lambda ก่อนหน้านี้
+                    fileData: base64Image, 
                     fileName: file ? file.name : ""
                 };
 
-                // ⚠️ แก้ไข URL ตรงนี้ หากคุณมีการตั้งค่า Route ใน API Gateway (เช่น ต่อท้ายด้วย /submit)
-                const apiUrl = "https://ulrx8z669l.execute-api.us-east-1.amazonaws.com/prod/submit"; 
+                const apiUrl = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/submit"; 
 
                 try {
-                    // เรียกใช้งาน API Gateway
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: {
@@ -96,11 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.ok) {
                         const responseData = await response.json();
                         console.log("ส่งข้อมูลสำเร็จ:", responseData);
-
-                        // บันทึกเข้า Session ไว้เผื่อหน้า confirm อยากใช้โชว์ข้อมูล
                         sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
-
-                        // เปลี่ยนหน้าไปแบบสะอาดๆ
                         window.location.href = "views/confirm.html";
                     } else {
                         throw new Error(`Server responded with status: ${response.status}`);
@@ -108,9 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 } catch (error) {
                     console.error("เกิดข้อผิดพลาด:", error);
-                    alert("ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง (ตรวจสอบว่าเปิด CORS ใน API Gateway หรือยัง)");
-                    
-                    // คืนค่าปุ่มให้กลับมากดใหม่ได้ถ้า Error
+                    alert("ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
                     submitBtn.innerText = originalBtnText;
                     submitBtn.disabled = false;
                 }
