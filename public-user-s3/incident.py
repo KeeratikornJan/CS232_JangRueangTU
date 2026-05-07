@@ -24,31 +24,40 @@ def lambda_handler(event, context):
     try:
         data = json.loads(event['body'])
         incident_id = str(uuid.uuid4())
+
         image_url = ""
 
         file_content = data.get('fileData') 
+        file_name = data.get('fileName')
 
-        # --- ส่วนจัดการรูปภาพ: บันทึกลง S3 ---
-        if file_content:
-            # ตัดส่วนหัวของ Base64 ออก (เช่น data:image/png;base64,)
-            header, encoded = data.get('fileData').split(",", 1)
-            file_extension = header.split('/')[1].split(';')[0] # ดึงนามสกุลไฟล์ (.png, .jpg)
+        # ส่วนจัดการรูปภาพ: บันทึกลง S3
+        if file_content and file_name:
+            # แยก Header ของ Base64 ออก (เช่น data:image/png;base64,...)
+            # เราต้องการแค่ข้อมูลหลังเครื่องหมายคอมม่า (,)
+            if "," in file_content:
+                encoded_data = file_content.split(",")[1]
+            else:
+                encoded_data = file_content
             
-            file_content = base64.b64decode(encoded)
-            file_name = f"incidents/{incident_id}.{file_extension}"
+            # แปลง Base64 เป็น Binary
+            image_binary = base64.b64decode(encoded_data)
+            
+            # กำหนดชื่อไฟล์ที่จะเก็บใน S3 (ใช้ ID เพื่อไม่ให้ชื่อซ้ำ)
+            file_extension = file_name.split('.')[-1]
+            s3_file_path = f"incident/{incident_id}.{file_extension}"
             
             # อัปโหลดไฟล์ไปที่ S3
             s3.put_object(
                 Bucket=S3_BUCKET_NAME,
-                Key=file_name,
-                Body=file_content,
-                ContentType=f'image/{file_extension}'
+                Key=s3_file_path,
+                Body=image_binary,
+                ContentType=f"image/{file_extension}"
             )
             
             # สร้าง URL ของรูปภาพ
-            image_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{file_name}"
+            file_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{s3_file_path}"
 
-        # --- ส่วนจัดการข้อมูล: บันทึกลง DynamoDB ---
+        # ส่วนจัดการข้อมูล: บันทึกลง DynamoDB
         item = {
             'incident_id': incident_id,
             'category': data.get('category'),
@@ -61,7 +70,6 @@ def lambda_handler(event, context):
             'details': data.get('details'),
             'event_time': data.get('event_time'),
             'image_url': image_url, # เก็บ Link แทนการเก็บตัวรูป
-            'status': 'pending'
         }
         
         table.put_item(Item=item)
