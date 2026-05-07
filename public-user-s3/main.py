@@ -27,21 +27,25 @@ def lambda_handler(event, context):
         complaint_id = str(uuid.uuid4())
         
         file_url = ""
+
+        file_content = data.get('fileData') 
+        file_name = data.get('fileName')
+
         
         # ส่วนจัดการรูปภาพและ S3
-        if data.get('fileData') and data.get('fileName'):
+        if file_content and file_name:
             # แยก Header ของ Base64 ออก (เช่น data:image/png;base64,...)
             # เราต้องการแค่ข้อมูลหลังเครื่องหมายคอมม่า (,)
-            if "," in data['fileData']:
-                header, encoded = data['fileData'].split(",", 1)
+            if "," in file_content:
+                encoded_data = file_content.split(",")[1]
             else:
-                encoded = data['fileData']
+                encoded_data = file_content
             
             # แปลง Base64 เป็น Binary
-            image_binary = base64.b64decode(encoded)
+            image_binary = base64.b64decode(encoded_data)
             
             # กำหนดชื่อไฟล์ที่จะเก็บใน S3 (ใช้ ID เพื่อไม่ให้ชื่อซ้ำ)
-            file_extension = data['fileName'].split('.')[-1]
+            file_extension = file_name.split('.')[-1]
             s3_file_path = f"complaints/{complaint_id}.{file_extension}"
             
             # อัปโหลดไปที่ S3
@@ -49,7 +53,7 @@ def lambda_handler(event, context):
                 Bucket=S3_BUCKET_NAME,
                 Key=s3_file_path,
                 Body=image_binary,
-                ContentType=f"image/{file_extension}" # ระบุประเภทไฟล์
+                ContentType=f"image/{file_extension}"
             )
             
             # สร้าง URL ของไฟล์ (แบบ Public)
@@ -64,10 +68,11 @@ def lambda_handler(event, context):
             'fullname': f"{data.get('firstname')} {data.get('lastname')}",
             'email': data.get('email'),
             'phone': data.get('phone'),
+            'id_card': data.get('id_card'),
             'subject': data.get('subject'),
             'location': data.get('location'),
             'details': data.get('details'),
-            'image_url': file_url  # เก็บเป็น URL แทนรูปภาพจริง
+            'image_url': file_url   # เก็บเป็น URL แทนรูปภาพจริง
         }
 
         table.put_item(Item=item)
@@ -75,7 +80,7 @@ def lambda_handler(event, context):
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({'status': 'success', 'image_url': file_url})
+            'body': json.dumps({'status': 'success', 'complaint_id': complaint_id})
         }
 
     except Exception as e:
@@ -83,5 +88,5 @@ def lambda_handler(event, context):
         return {
             'statusCode': 500,
             'headers': headers,
-            'body': json.dumps({'error': 'Internal Server Error'})
+            'body': json.dumps({'error': str(e)})
         }
