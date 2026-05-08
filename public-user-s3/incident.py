@@ -9,7 +9,7 @@ s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 
 # ตั้งชื่อ Bucket และ Table
-S3_BUCKET_NAME = 'your-bucket-name' # เปลี่ยนชื่อ bucket
+S3_BUCKET_NAME = 'cs232-complaint-images-99' # เปลี่ยนชื่อ bucket
 TABLE_NAME = 'Incidents'
 table = dynamodb.Table(TABLE_NAME)
 
@@ -20,6 +20,9 @@ def lambda_handler(event, context):
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
+    
+    if event.get('httpMethod') == 'OPTIONS':
+        return {'statusCode': 200, 'headers': headers, 'body': json.dumps('OK')}
 
     try:
         data = json.loads(event['body'])
@@ -61,6 +64,7 @@ def lambda_handler(event, context):
         item = {
             'incident_id': incident_id,
             'category': data.get('category'),
+            'status': 'pending', # เพิ่มเพื่อให้ระบบ Admin มองเห็น
             'firstname': data.get('firstname'),
             'lastname': data.get('lastname'),
             'email': data.get('email'),

@@ -6,15 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     tabs.forEach(tab => {
         tab.addEventListener('click', function () {
-            // ลบคลาส active ออกจากทุกปุ่ม
             tabs.forEach(t => t.classList.remove('active'));
-
-            // เติมคลาส active ให้ปุ่มที่ถูกกด
             this.classList.add('active');
-
-            // เอาชื่อบนปุ่มไปใส่ใน Input ลับ
             categoryInput.value = this.innerText;
-
             console.log("หมวดหมู่: ", categoryInput.value);
         });
     });
@@ -33,11 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // 2. ดึงข้อมูลจากฟอร์ม
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
-
-            // 3. จัดการเรื่องไฟล์
             const fileInput = document.getElementById('file-input');
             const file = fileInput ? fileInput.files[0] : null;
 
@@ -80,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     fileName: file ? file.name : ""
                 };
 
-                const apiUrl = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/submit"; 
+                const apiUrl = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Complaints-submit"; 
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -97,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
                         window.location.href = "views/confirm.html";
                     } else {
+                        const errorData = await response.json();
                         throw new Error(`Server responded with status: ${response.status}`);
                     }
 
@@ -140,9 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (btnRemoveFile) {
-        btnRemoveFile.addEventListener('click', function () {
-            fileInput.value = ""; 
-            previewContainer.style.display = 'none'; 
+        btnRemoveFile.addEventListener('click', () => {
+            fileInput.value = "";
+            previewContainer.style.display = 'none';
+            imagePreview.src = "";
         });
     }
 });

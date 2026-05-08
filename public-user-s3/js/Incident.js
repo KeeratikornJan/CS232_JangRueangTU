@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- Validation (ตรวจสอบข้อมูล) ---
             if (!data.firstname) { alert("กรุณากรอกชื่อ"); return; }
             if (!data.lastname) { alert("กรุณากรอกนามสกุล"); return; }
+            if (!data.email) { alert("กรุณากรอกอีเมล"); return; }
             if (!data.email || !validateEmail(data.email)) { alert("กรุณากรอกอีเมลให้ถูกต้อง"); return; }
             if (!data.phone) { alert("กรุณากรอกเบอร์มือถือ"); return; }
             
@@ -30,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!data.event_time) { alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ"); return; }
             if (!data.location) { alert("กรุณาระบุสถานที่เกิดเหตุ"); return; }
             if (!data.details || data.details.trim() === "") { alert("กรุณากรอกรายละเอียด"); return; }
+
+            console.log("กำลังเตรียมส่งข้อมูล...");
 
             // --- ส่วนปุ่มเพื่อป้องกันการกดซ้ำ ---
             const submitBtn = document.querySelector('.btn-submit');
@@ -69,11 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.ok) {
                         const responseData = await response.json();
                         console.log("ส่งข้อมูลสำเร็จ:", responseData);
-
-                        // เก็บข้อมูลลง Session เผื่อหน้า Confirm จะใช้แสดงผล
                         sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
-                        
-                        // ไปหน้ายืนยัน
                         window.location.href = "confirmIncident.html";
                     } else {
                         const errorData = await response.json();
@@ -83,8 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error("เกิดข้อผิดพลาด:", error);
                     alert("ไม่สามารถส่งข้อมูลได้: " + error.message);
-                    
-                    // คืนค่าปุ่ม
                     submitBtn.innerText = originalBtnText;
                     submitBtn.disabled = false;
                 }
