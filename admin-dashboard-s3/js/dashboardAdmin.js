@@ -1,79 +1,74 @@
-/*const API_URL = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Admin/dashboard";
+const API_URL = ""; // ใส่ API endpoint จริงที่นี่
 
-document.addEventListener('DOMContentLoaded', fetchDashboardData);
+document.addEventListener('DOMContentLoaded', () => {
+    createCaseDetailPopup();
+    fetchDashboardData();
+});
 
-async function fetchDashboardData() {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-
-        if (data.stats)                                 updateStatsUI(data.stats);
-        if (data.categories && data.categories.length) { renderCategoryList(data.categories); drawPieChart(data.categories); }
-        if (data.stats)                                 renderSummaryCards(data.stats);
-        renderLatestCases(data.latest_cases || []);
-
-    } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-    }
+function computeDashboardData(rawItems) {
+    const complaints = rawItems.filter(i => i.complaint_id);
+    const incidents = rawItems.filter(i => i.incident_id);
+    const pending = rawItems.filter(i =>
+        ['pending', 'รอดำเนินการ', 'ใหม่'].includes((i.status || '').toLowerCase())
+    ).length;
+    const inProgress = rawItems.filter(i =>
+        ['in_progress', 'กำลังดำเนินการ', 'กำลังดำเนิน'].includes((i.status || '').toLowerCase())
+    ).length;
+    const resolved = rawItems.filter(i =>
+        ['resolved', 'completed', 'success', 'เสร็จสิ้น'].includes((i.status || '').toLowerCase())
+    ).length;
+    const categoryCounts = {};
+    rawItems.forEach(item => {
+        const cat = item.category || 'อื่นๆ';
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+    const categories = Object.entries(categoryCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    const latestCases = [...rawItems]
+        .filter(i => i.timestamp)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+    return {
+        stats: {
+            incident_count: incidents.length,
+            complaint_count: complaints.length,
+            pending_cases: pending,
+            in_progress_cases: inProgress,
+            resolved_cases: resolved
+        },
+        categories,
+        latest_cases: latestCases
+    };
 }
-*/
-document.addEventListener('DOMContentLoaded', fetchDashboardData);
+
 async function fetchDashboardData() {
     try {
-        // ⬇️ Mock Data จำลองโครงสร้างข้อมูลจาก Database
-        const data = {
-            stats: {
-                incident_count: 16,
-                complaint_count: 14,
-                pending_cases: 5
-            },
-            categories: [
-                { name: "สถานที่", count: 23, color: "#ff9800" },
-                { name: "บุคลากร", count: 15, color: "#e056f1" },
-                { name: "รถโดยสาร", count: 20, color: "#56c108" },
-                { name: "ระบบ IT", count: 17, color: "#a4b800" },
-                { name: "อุปกรณ์อิเล็กทรอนิกส์", count: 10, color: "#c438e8" },
-                { name: "ร้านค้า", count: 7, color: "#18c4c7" },
-                { name: "อื่นๆ", count: 8, color: "#ff0b67" }
-            ],
-            latest_cases: [
-                {
-                    incident_id: "GU-5868544001",
-                    subject: "เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์",
-                    category: "อุปกรณ์อิเล็กทรอนิกส์",
-                    status: "รอดำเนินการ",
-                    timestamp: "2026-05-08T10:00:00Z"
-                },
-                {
-                    incident_id: "EMG-2471900",
-                    subject: "ท่อประปาแตกบริเวณหน้าอาคารเรียนรวม น้ำไหลท่วมทางเดิน",
-                    category: "สถานที่",
-                    status: "กำลังดำเนินการ",
-                    timestamp: "2026-05-08T09:30:00Z"
-                },
-                {
-                    incident_id: "GU-5868544002",
-                    subject: "เจ้าหน้าที่พูดจาไม่สุภาพขณะขอติดต่อรับเอกสาร",
-                    category: "บุคลากร",
-                    status: "เสร็จสิ้น",
-                    timestamp: "2026-05-07T14:15:00Z"
-                }
-            ]
-        };
+        let data;
+        if (API_URL) {
+            const response = await fetch(API_URL);
+            const rawItems = await response.json();
+            data = computeDashboardData(rawItems);
+        } else {
+            data = MOCK_DASHBOARD_DATA;
+        }
 
         if (data.stats) {
             updateStatsUI(data.stats);
             renderSummaryCards(data.stats);
         }
-        
-        if (data.categories && data.categories.length) { 
-            renderCategoryList(data.categories); 
-            drawPieChart(data.categories); 
+
+        if (data.categories && data.categories.length) {
+            const categoriesWithColor = data.categories.map(cat => ({
+                name: cat.name,
+                count: cat.count,
+                color: CATEGORY_COLORS[cat.name] || "#999999"
+            }));
+            renderCategoryList(categoriesWithColor);
+            drawPieChart(categoriesWithColor);
         }
 
         renderLatestCases(data.latest_cases || []);
-
-        console.log("โหลดข้อมูลและแสดงผลสำเร็จ");
 
     } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -99,8 +94,8 @@ function renderSummaryCards(stats) {
     const cards = [
         { label: "ทั้งหมด", count: totalCases, icon: "", bg: "#3f79d0" },
         { label: "รอดำเนินการ", count: pendingCases, icon: "✳", bg: "#e53d39" },
-        { label: "กำลังดำเนินการ", count: 33, icon: "🔧", bg: "#efc84b" },
-        { label: "เสร็จสิ้น", count: 29, icon: "✓", bg: "#4d7f4f" },
+        { label: "กำลังดำเนินการ", count: stats.in_progress_cases || 0, icon: "🔧", bg: "#efc84b" },
+        { label: "เสร็จสิ้น", count: stats.resolved_cases || 0, icon: "✓", bg: "#4d7f4f" },
     ];
     container.innerHTML = cards.map(card => `
         <div class="summary-card" style="background-color: ${card.bg};">
@@ -116,13 +111,20 @@ function renderSummaryCards(stats) {
 function renderCategoryList(categories) {
     const listEl = document.getElementById('categoryList');
     if (!listEl) return;
-    
-    listEl.innerHTML = categories.map(cat => `
-        <div class="category-item" style="display: flex; align-items: center; margin-bottom: 8px;">
-            <span class="dot" style="background-color:${cat.color}; width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
-            <span class="name" style="flex: 1;">${cat.name}</span>
-            <span class="percent" style="font-weight: bold;">${cat.count} รายการ</span>
-        </div>`).join('');
+
+    const total = categories.reduce((sum, c) => sum + c.count, 0);
+
+    listEl.innerHTML = categories.map(cat => {
+        const pct = total > 0 ? Math.round((cat.count / total) * 100) : 0;
+        return `
+        <div class="category-item">
+            <span class="category-name">${cat.name}</span>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${pct}%;background-color:${cat.color};"></div>
+            </div>
+            <span class="category-percent">${pct}%</span>
+        </div>`;
+    }).join('');
 }
 
 // ---------- Pie Chart ----------
@@ -130,8 +132,8 @@ function drawPieChart(categories) {
     const svg = document.getElementById('pieSvg');
     if (!svg) return;
 
-    // viewBox is "0 0 520 340" — draw pie centred at cx=170, cy=170, r=130
     const CX = 170, CY = 170, R = 130;
+    svg.setAttribute('viewBox', '0 0 340 340');
     const total = categories.reduce((sum, c) => sum + c.count, 0);
     let cumulative = 0;
     svg.innerHTML = '';
@@ -234,40 +236,234 @@ function renderLatestCases(cases) {
     }).join('');
 }
 
-// ---------- Helpers ----------
-function formatTimestamp(ts) {
-    try {
-        return new Date(ts).toLocaleString('th-TH', {
-            day: '2-digit', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-    } catch { return ts; }
+// ---------- Case Detail Popup ----------
+
+function createCaseDetailPopup() {
+    const overlay = document.createElement('div');
+    overlay.className = 'case-detail-overlay';
+    overlay.id = 'caseDetailOverlay';
+
+    const popup = document.createElement('aside');
+    popup.className = 'case-detail-popup';
+    popup.id = 'caseDetailPopup';
+    popup.setAttribute('aria-hidden', 'true');
+    popup.innerHTML = `
+        <div class="case-detail-header">
+          <div class="case-detail-id" id="caseDetailId">-</div>
+          <button class="case-detail-close" id="caseDetailCloseBtn" type="button">×</button>
+        </div>
+        <div class="case-detail-body">
+          <div class="popup-top-row">
+            <div class="popup-section-label">รายละเอียดเคส</div>
+            <div class="popup-location">
+              <span>📍</span>
+              <span id="caseDetailLocation">-</span>
+            </div>
+          </div>
+          <div class="popup-divider"></div>
+          <div class="popup-section">
+            <div class="popup-section-label">หัวข้อ</div>
+            <div class="popup-section-text popup-strong" id="caseDetailTitle">-</div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">รายละเอียด</div>
+            <div class="popup-section-text" id="caseDetailDesc">-</div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">ผู้แจ้ง</div>
+            <div class="popup-section-text">
+              <div><span class="popup-strong">ชื่อ-สกุล :</span> <span id="caseDetailName">-</span></div>
+              <div><span class="popup-strong">Email :</span> <span id="caseDetailEmail">-</span></div>
+              <div><span class="popup-strong">หมายเลขบัตรประชาชน :</span> <span id="caseDetailIdCard">-</span></div>
+              <div><span class="popup-strong">เบอร์มือถือ :</span> <span id="caseDetailPhone">-</span></div>
+            </div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">ข้อมูลแจ้งเหตุ</div>
+            <div class="popup-section-text">
+              <div><span class="popup-strong">วันที่เกิดเหตุ :</span> <span id="caseDetailDate">-</span></div>
+              <div><span class="popup-strong">เวลาที่เกิดเหตุ :</span> <span id="caseDetailTime">-</span></div>
+            </div>
+          </div>
+          <div class="popup-image-box">
+            <img id="caseDetailImage" class="popup-image" src="" alt="case image" />
+            <div class="popup-image-placeholder" id="caseDetailImgPlaceholder">🖼️</div>
+          </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(popup);
+
+    document.getElementById('caseDetailCloseBtn').addEventListener('click', closeCaseDetail);
+    overlay.addEventListener('click', closeCaseDetail);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCaseDetail(); });
 }
 
 function viewDetail(id) {
-    window.location.href = `views/caseDetail.html?id=${id}`;
+    const item = MOCK_API.find(i => (i.complaint_id || i.incident_id) === id);
+    if (!item) return;
+
+    document.getElementById('caseDetailId').textContent       = item.complaint_id || item.incident_id;
+    document.getElementById('caseDetailLocation').textContent = item.location || '-';
+    document.getElementById('caseDetailTitle').textContent    = item.subject || '-';
+    document.getElementById('caseDetailDesc').textContent     = item.details || '-';
+    document.getElementById('caseDetailName').textContent     = `${item.firstname || ''} ${item.lastname || ''}`.trim() || '-';
+    document.getElementById('caseDetailEmail').textContent    = item.email || '-';
+    document.getElementById('caseDetailIdCard').textContent   = item.id_card || '-';
+    document.getElementById('caseDetailPhone').textContent    = item.phone || '-';
+    document.getElementById('caseDetailDate').textContent     = item.event_time ? item.event_time.split('T')[0] : '-';
+    document.getElementById('caseDetailTime').textContent     = item.event_time && item.event_time.includes('T') ? item.event_time.split('T')[1] : '-';
+
+    const img = document.getElementById('caseDetailImage');
+    const ph  = document.getElementById('caseDetailImgPlaceholder');
+    if (item.image_url_presigned && item.image_url_presigned.trim()) {
+        img.src = item.image_url_presigned;
+        img.style.display = 'block';
+        ph.style.display  = 'none';
+    } else {
+        img.src = '';
+        img.style.display = 'none';
+        ph.style.display  = 'flex';
+    }
+
+    document.getElementById('caseDetailPopup').classList.add('show');
+    document.getElementById('caseDetailOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCaseDetail() {
+    document.getElementById('caseDetailPopup').classList.remove('show');
+    document.getElementById('caseDetailOverlay').classList.remove('show');
+    document.body.style.overflow = '';
 }
 
 // ---------- Similar Cases Overlay ----------
-const overlay         = document.getElementById('similarCasesOverlay');
-const closeBtn        = document.getElementById('closeSimilarCasesBtn');
-const toggleDetailBtn = document.getElementById('toggleSimilarDetailBtn');
-const bottomToggleBtn = document.getElementById('bottomToggleSimilarBtn');
-const detailPanel     = document.getElementById('similarCaseDetail');
 
-if (closeBtn && overlay) {
-    closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
-}
-if (toggleDetailBtn && detailPanel) {
-    toggleDetailBtn.addEventListener('click', () => {
-        const isOpen = !detailPanel.classList.contains('hidden');
-        detailPanel.classList.toggle('hidden', isOpen);
-        toggleDetailBtn.textContent = isOpen ? '˅' : '˄';
-    });
-}
-if (bottomToggleBtn && overlay) {
-    bottomToggleBtn.addEventListener('click', () => {
-        overlay.classList.toggle('collapsed');
-        bottomToggleBtn.textContent = overlay.classList.contains('collapsed') ? '˅' : '˄';
-    });
+function openSimilarCases(id) {
+    const panel   = document.getElementById('similarCasesPanel');
+    const overlay = document.getElementById('similarCasesOverlay');
+    if (!panel || !overlay) return;
+
+    const thisCase = MOCK_API.find(i => (i.complaint_id || i.incident_id) === id);
+    if (!thisCase) return;
+
+    const similar  = MOCK_API.filter(i =>
+        i.category === thisCase.category && (i.complaint_id || i.incident_id) !== id
+    );
+    const allCases = [thisCase, ...similar];
+    let currentIndex = 0;
+
+    function renderPanel(item) {
+        const caseId  = item.complaint_id || item.incident_id;
+        const type    = item.complaint_id ? 'ร้องเรียน' : 'แจ้งเหตุ';
+        const dateStr = item.event_time ? item.event_time.split('T')[0] : '-';
+        const timeStr = item.event_time && item.event_time.includes('T') ? item.event_time.split('T')[1] : '-';
+
+        panel.innerHTML = `
+          <div class="similar-cases-header">
+            <h2 class="similar-cases-title">รวมเคสใกล้เคียง</h2>
+            <div class="similar-cases-summary">
+              <div class="summary-item summary-item-count">
+                <div class="summary-circle">${allCases.length}</div>
+                <div class="summary-text">จำนวนที่พบเคสอาจซ้ำซ้อน</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-text">หมวดหมู่ ${thisCase.category || '-'}</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-text">📍 ${thisCase.location || '-'}</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-text">${formatTimestamp(thisCase.timestamp)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="similar-case-card">
+            <div class="similar-case-top">
+              <div class="similar-case-left">
+                <div class="similar-case-id">${caseId}</div>
+                <div class="similar-case-main-title">${item.subject || '-'}</div>
+                <div class="similar-case-tags">
+                  <span class="similar-tag similar-tag-green">${type}</span>
+                </div>
+              </div>
+              <div class="similar-case-right">
+                <div class="similar-case-time">${formatTimestamp(item.timestamp)}</div>
+                <button type="button" class="similar-action-btn arrow-btn" id="toggleSimilarDetailBtn">˄</button>
+                <div class="similar-case-number">${currentIndex + 1}</div>
+                <button type="button" class="similar-action-btn close-btn" id="closeSimilarCasesBtn">×</button>
+              </div>
+            </div>
+
+            <div id="similarCaseDetail" class="similar-case-detail">
+              <div class="similar-detail-left">
+                <div class="detail-group">
+                  <div class="detail-label">หัวข้อ</div>
+                  <div class="detail-value detail-value-bold">${item.subject || '-'}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">รายละเอียด</div>
+                  <div class="detail-value">${item.details || '-'}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">ผู้แจ้ง</div>
+                  <div class="detail-value">
+                    ชื่อ-สกุล : ${item.firstname || ''} ${item.lastname || ''}<br>
+                    Email : ${item.email || '-'}<br>
+                    หมายเลขบัตรประชาชน : ${item.id_card || '-'}<br>
+                    เบอร์มือถือ : ${item.phone || '-'}
+                  </div>
+                </div>
+              </div>
+              <div class="similar-detail-right">
+                <div class="detail-group">
+                  <div class="detail-label">ข้อมูลแจ้งเหตุ</div>
+                  <div class="detail-value">
+                    วันที่เกิดเหตุ : ${dateStr}<br>
+                    เวลาที่เกิดเหตุ : ${timeStr}
+                  </div>
+                </div>
+                <div class="similar-image-box">
+                  <span class="similar-image-icon">🖼️</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="similar-cases-footer">
+            <div class="similar-pagination">
+              <button type="button" class="pagination-arrow" id="prevCaseBtn">≪</button>
+              <div class="pagination-dots">
+                ${allCases.map((_, i) => `<span class="pagination-dot${i === currentIndex ? ' active' : ''}"></span>`).join('')}
+              </div>
+              <button type="button" class="pagination-arrow" id="nextCaseBtn">≫</button>
+            </div>
+            <button type="button" class="similar-bottom-toggle" id="bottomToggleSimilarBtn">˄</button>
+          </div>
+        `;
+
+        document.getElementById('closeSimilarCasesBtn').addEventListener('click', () => overlay.classList.add('hidden'));
+
+        const toggleBtn = document.getElementById('toggleSimilarDetailBtn');
+        const detailEl  = document.getElementById('similarCaseDetail');
+        toggleBtn.addEventListener('click', () => {
+            const collapsed = detailEl.classList.toggle('collapsed');
+            toggleBtn.textContent = collapsed ? '˅' : '˄';
+        });
+
+        document.getElementById('bottomToggleSimilarBtn').addEventListener('click', () => {
+            overlay.classList.toggle('collapsed');
+        });
+
+        document.getElementById('prevCaseBtn').addEventListener('click', () => {
+            if (currentIndex > 0) { currentIndex--; renderPanel(allCases[currentIndex]); }
+        });
+        document.getElementById('nextCaseBtn').addEventListener('click', () => {
+            if (currentIndex < allCases.length - 1) { currentIndex++; renderPanel(allCases[currentIndex]); }
+        });
+    }
+
+    renderPanel(allCases[currentIndex]);
+    overlay.classList.remove('hidden');
 }

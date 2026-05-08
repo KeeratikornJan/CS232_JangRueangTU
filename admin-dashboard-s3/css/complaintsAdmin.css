@@ -77,6 +77,10 @@
   background: #67966a;
 }
 
+.filter-btn.active-filter {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(0, 0, 0, 0.55);
+}
+
 .category-select {
   width: 158px;
   height: 38px;
