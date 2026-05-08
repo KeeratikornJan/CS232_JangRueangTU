@@ -1,3 +1,30 @@
+/*const API_URL = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Admin/dashboard";
+
+document.addEventListener('DOMContentLoaded', fetchDashboardData);
+
+const formattedData = rawDataFromApi.map(item => {
+    return {
+        id: item.complaint_id || item.incident_id,
+        title: item.subject,
+        fullTitle: item.subject,
+        category: item.category,
+        status: item.status,
+        time: item.timestamp, // อาจจะต้องเรียกฟังก์ชัน formatTimestamp(item.timestamp)
+        location: item.location,
+        description: item.details,
+        reporterName: `${item.firstname || ''} ${item.lastname || ''}`.trim() || item.fullname,
+        reporterEmail: item.email,
+        reporterId: item.id_card,
+        reporterPhone: item.phone,
+        // ตัดข้อความ event_time ออกเป็น Date และ Time
+        incidentDate: item.event_time ? item.event_time.split('T')[0] : '-',
+        incidentTime: item.event_time ? item.event_time.split('T')[1] : '-',
+        image: item.image_url_presigned || '',
+        department: item.department || '', // ป้องกัน error แม้ db ยังไม่มี
+        note: item.note || '' // ป้องกัน error แม้ db ยังไม่มี
+    };
+});
+*/
 const complaints = [
   {
     id: "GU-5868544001",
@@ -211,22 +238,39 @@ let currentCategoryFilter = "ทั้งหมด";
 let currentSelectedComplaint = null;
 
 function getStatusClass(status) {
-  if (status === "ใหม่") return "status-new";
-  if (status === "กำลังดำเนิน") return "status-progress";
+  const s = (status || "").toLowerCase();
+  if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") return "status-new";
+  if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") return "status-progress";
   return "status-done";
 }
 
 function getStatusLabel(status) {
-  if (status === "กำลังดำเนิน") {
-    return "กำลัง...";
-  }
+  const s = (status || "").toLowerCase();
+  if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") return "กำลัง...";
+  if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") return "ใหม่";
+  if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed") return "เสร็จสิ้น";
   return status;
 }
 
 function filterComplaints() {
   return complaints.filter((item) => {
+
+    const s = (item.status || "").toLowerCase();
+
+    let normalizedStatus = item.status; 
+
+    if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") {
+      normalizedStatus = "ใหม่";
+    } 
+    else if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") {
+      normalizedStatus = "กำลังดำเนิน";
+    } 
+    else if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed") {
+      normalizedStatus = "เสร็จสิ้น";
+    }
+
     const matchStatus =
-      currentStatusFilter === "ทั้งหมด" || item.status === currentStatusFilter;
+      currentStatusFilter === "ทั้งหมด" || normalizedStatus === currentStatusFilter;
 
     const matchCategory =
       currentCategoryFilter === "ทั้งหมด" || item.category === currentCategoryFilter;

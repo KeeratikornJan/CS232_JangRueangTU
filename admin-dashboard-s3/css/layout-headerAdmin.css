@@ -60,6 +60,7 @@ body {
 .topbar-brand {
   text-align: right;
   padding-right: 18px;
+  padding-top: 4px;
 }
 
 .Logo {

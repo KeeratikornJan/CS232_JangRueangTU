@@ -93,9 +93,12 @@ function updateStatsUI(stats) {
 function renderSummaryCards(stats) {
     const container = document.getElementById('summaryCards');
     if (!container) return;
+
+    const totalCases = (stats.incident_count || 0) + (stats.complaint_count || 0);
+    const pendingCases = stats.pending_cases || 0;
     const cards = [
-        { label: "ทั้งหมด", count: 50, icon: "", bg: "#3f79d0" },
-        { label: "รอดำเนินการ", count: 17, icon: "✳", bg: "#e53d39" },
+        { label: "ทั้งหมด", count: totalCases, icon: "", bg: "#3f79d0" },
+        { label: "รอดำเนินการ", count: pendingCases, icon: "✳", bg: "#e53d39" },
         { label: "กำลังดำเนินการ", count: 33, icon: "🔧", bg: "#efc84b" },
         { label: "เสร็จสิ้น", count: 29, icon: "✓", bg: "#4d7f4f" },
     ];
@@ -176,13 +179,24 @@ function renderLatestCases(cases) {
         const id      = item.incident_id || item.complaint_id || '-';
         const subject = item.subject || 'แจ้งเหตุ / ร้องเรียน';
         const cat     = item.category || '';
-        const status  = item.status   || '';
+        const rawStatus = item.status || '';
         const ts      = item.timestamp ? formatTimestamp(item.timestamp) : '';
+        let displayStatus = rawStatus;
         
         //กำหนดสีตามสถานะ
-        let sideColor = "side-green";
-        if (status === "รอดำเนินการ") sideColor = "side-red";
-        else if (status === "กำลังดำเนินการ") sideColor = "side-yellow";
+        let sideColor = "side-gray";
+        if (rawStatus.toLowerCase() === "pending" || rawStatus === "รอดำเนินการ") {
+            displayStatus = "รอดำเนินการ";
+            sideColor = "side-red";
+        } 
+        else if (rawStatus.toLowerCase() === "in_progress" || rawStatus === "กำลังดำเนินการ") {
+            displayStatus = "กำลังดำเนินการ";
+            sideColor = "side-yellow";
+        } 
+        else if (rawStatus.toLowerCase() === "resolved" || rawStatus === "success" || rawStatus === "เสร็จสิ้น") {
+            displayStatus = "เสร็จสิ้น";
+            sideColor = "side-green";
+        }
 
         //สร้าง Tags แสดงหมวดหมู่
         //ถ้าไม่เจอในเงื่อนไข ให้ใช้ tag-category7 เป็นค่าเริ่มต้น
