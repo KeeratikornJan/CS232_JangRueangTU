@@ -9,7 +9,7 @@ s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 
 # ตั้งชื่อ Bucket และ Table
-S3_BUCKET_NAME = 'your-bucket-name' # เปลี่ยนชื่อ bucket
+S3_BUCKET_NAME = 'cs232-complaint-images-99' # เปลี่ยนชื่อ bucket
 TABLE_NAME = 'Incidents'
 table = dynamodb.Table(TABLE_NAME)
 
@@ -51,7 +51,7 @@ def lambda_handler(event, context):
                 Bucket=S3_BUCKET_NAME,
                 Key=s3_file_path,
                 Body=image_binary,
-                ContentType=f"image/{file_extension}"
+                ContentType=f"image/png"
             )
             
             # สร้าง URL ของรูปภาพ
@@ -60,6 +60,7 @@ def lambda_handler(event, context):
         # ส่วนจัดการข้อมูล: บันทึกลง DynamoDB
         item = {
             'incident_id': incident_id,
+            'category': data.get('category'),
             'firstname': data.get('firstname'),
             'lastname': data.get('lastname'),
             'email': data.get('email'),
@@ -69,7 +70,7 @@ def lambda_handler(event, context):
             'location': data.get('location'),
             'details': data.get('details'),
             'event_time': data.get('event_time'),
-            'image_url': image_url, # เก็บ Link แทนการเก็บตัวรูป
+            'image_url': file_url # เก็บ Link แทนการเก็บตัวรูป
         }
         
         table.put_item(Item=item)

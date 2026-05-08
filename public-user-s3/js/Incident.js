@@ -1,96 +1,46 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    //เช็คอีเมล//
+    // --- 1. เช็คอีเมล ---
     function validateEmail(email) {
-        // สูตร Regex สำหรับเช็คโครงสร้างอีเมล
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
     }
 
-    // --- 2. ในส่วนการจัดการการส่งฟอร์ม ---
+    // --- 2. การจัดการการส่งฟอร์ม ---
     const form = document.getElementById('complaintForm');
 
     if (form) {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // 2. ดึงข้อมูลจากฟอร์ม (เขียนรอบเดียวพอครับ)
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
-
-            // 3. จัดการเรื่องไฟล์
             const fileInput = document.getElementById('file-input');
             const file = fileInput ? fileInput.files[0] : null;
 
-            // เช็คชื่อ-นามสกุล
-            if (!data.firstname) {
-                alert("กรุณากรอกชื่อ");
-                return;
-            }
-
-            if (!data.lastname) {
-                alert("กรุณากรอกนามสกุล");
-                return;
-            }
-
-
-            // เช็คอีเมล
-            if (!data.email) {
-                alert("กรุณากรอกอีเมล");
-                return;
-            }
-
-            // เช็คเบอร์ 
-            if (!data.phone) {
-                alert("กรุณากรอกเบอร์มือถือ");
-                return;
-            }
-
-            if (!validateEmail(data.email)) {
-                alert("รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
-                return;
-            }
-
-            //เช็คเลขบัตรปชช
+            // --- Validation (ตรวจสอบข้อมูล) ---
+            if (!data.firstname) { alert("กรุณากรอกชื่อ"); return; }
+            if (!data.lastname) { alert("กรุณากรอกนามสกุล"); return; }
+            if (!data.email || !validateEmail(data.email)) { alert("กรุณากรอกอีเมลให้ถูกต้อง"); return; }
+            if (!data.phone) { alert("กรุณากรอกเบอร์มือถือ"); return; }
+            
             const idPattern = /^[0-9]{13}$/;
+            if (!idPattern.test(data.id_card)) { alert("กรุณากรอกเลขบัตรประชาชน 13 หลัก"); return; }
+            if (!data.subject) { alert("กรุณาระบุหัวข้อแจ้งเหตุ"); return; }
+            if (!data.event_time) { alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ"); return; }
+            if (!data.location) { alert("กรุณาระบุสถานที่เกิดเหตุ"); return; }
+            if (!data.details || data.details.trim() === "") { alert("กรุณากรอกรายละเอียด"); return; }
 
-            if (!idPattern.test(data.id_card)) {
-                alert("กรุณากรอกเลขบัตรประชาชนเป็นตัวเลข 13 หลัก");
-                return;
-            }
+            // --- ส่วนปุ่มเพื่อป้องกันการกดซ้ำ ---
+            const submitBtn = document.querySelector('.btn-submit');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.innerText = "กำลังส่งข้อมูล...";
+            submitBtn.disabled = true;
 
-            // เช็คหัวข้อ
-            if (!data.subject) {
-                alert("กรุณาระบุหัวข้อร้องเรียน");
-                return;
-            }
-
-            // เช็ควันเวลาที่เกิดเหตุ (สำคัญ!)
-            if (!data.event_time) {
-                alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ");
-                return;
-            }
-
-            // เช็คสถานที่เกิดเหตุ
-            if (!data.location) {
-                alert("กรุณาระบุสถานที่เกิดเหตุ");
-                return;
-            }
-
-            // เช็ครายละเอียด
-            if (!data.details || data.details.trim() === "") {
-                alert("กรุณากรอกรายละเอียดการร้องเรียน");
-                return;
-            }
-
-            console.log("กำลังส่งข้อมูล...", data);
-
-            // --- ส่วนท้ายของฟังก์ชัน Submit ---
-
-
-            const proceed = (base64Image = null) => {
+            // --- ฟังก์ชันส่งข้อมูลไป AWS ---
+            const proceed = async (base64Image = null) => {
                 const finalData = {
-                    category: "เเจ้งเหตุ",
+                    category: "แจ้งเหตุ",
                     firstname: data.firstname,
                     lastname: data.lastname,
                     email: data.email,
@@ -100,18 +50,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     location: data.location,
                     details: data.details,
                     event_time: data.event_time,
-                    fileData: base64Image,
-                    fileName: file ? file.name : ""
+                    fileData: base64Image, // ตรงกับ data.get('fileData') ใน incident.py
+                    fileName: file ? file.name : "" // ตรงกับ data.get('fileName') ใน incident.py
                 };
 
-                // บันทึกเข้า Session (อันนี้ข้อมูลจะไม่ไปโผล่ที่ URL)
-                sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
+                // ใส่ URL ของ API Gateway ที่คุณสร้างจากไฟล์ incident.py
+                const apiUrl = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Incident-submit"; 
 
-                // เปลี่ยนหน้าไปแบบสะอาดๆ
-                window.location.href = "confirmIncident.html";
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(finalData)
+                    });
+
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        console.log("ส่งข้อมูลสำเร็จ:", responseData);
+
+                        // เก็บข้อมูลลง Session เผื่อหน้า Confirm จะใช้แสดงผล
+                        sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
+                        
+                        // ไปหน้ายืนยัน
+                        window.location.href = "confirmIncident.html";
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `Server error: ${response.status}`);
+                    }
+
+                } catch (error) {
+                    console.error("เกิดข้อผิดพลาด:", error);
+                    alert("ไม่สามารถส่งข้อมูลได้: " + error.message);
+                    
+                    // คืนค่าปุ่ม
+                    submitBtn.innerText = originalBtnText;
+                    submitBtn.disabled = false;
+                }
             };
 
-            // --- ส่วนสั่งการให้อ่านไฟล์ ---
+            // --- เริ่มต้นการอ่านไฟล์ภาพ ---
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => proceed(event.target.result);
@@ -122,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- ส่วนแสดงตัวอย่างรูปภาพ (Preview) ---
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
     const imagePreview = document.getElementById('image-preview');
@@ -133,23 +113,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    imagePreview.src = e.target.result; // เอาข้อมูลรูปใส่ในแท็ก img
-                    previewContainer.style.display = 'inline-block'; // สั่งให้ Container แสดงตัว
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'inline-block';
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
-    // ปุ่มลบรูป (ถ้ากด X ให้ล้างค่า)
     if (btnRemoveFile) {
         btnRemoveFile.addEventListener('click', () => {
-            fileInput.value = ""; // ล้างไฟล์ใน input
-            previewContainer.style.display = 'none'; // ซ่อน Preview
+            fileInput.value = "";
+            previewContainer.style.display = 'none';
             imagePreview.src = "";
         });
     }
 });
-
-
-
