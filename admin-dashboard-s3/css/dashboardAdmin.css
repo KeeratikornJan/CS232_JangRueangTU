@@ -34,11 +34,10 @@
 .pie-area {
   position: relative;
   width: 520px;
-  height: 340px;
+  height: 520px;
 }
 
 .pie-svg {
-  width: 100%;
   height: 100%;
   display: block;
 }
@@ -241,11 +240,6 @@
   line-height: 1;
 }
 
-.bg-blue { background: #3f79d0; }
-.bg-red { background: #e53d39; }
-.bg-yellow { background: #efc84b; }
-.bg-green { background: #4d7f4f; }
-
 /* FEED CARD */
 .feed-card {
   margin-top: 18px;
@@ -302,6 +296,10 @@
   background: #4b8f55;
 }
 
+.side-yellow {
+  background: #f9c23c;
+}
+
 .side-red {
   background: #ef4a4a;
 }
@@ -344,19 +342,38 @@
   font-weight: 700;
 }
 
-.tag-purple {
-  background: #efc3ff;
-  color: #c34aed;
+.tag-category1 {
+  color: #ff9800;
+  background: #fdcb80;
 }
-
-.tag-pink {
-  background: #ffcad5;
-  color: #ff5473;
+.tag-category2 {
+  color: #e056f1;
+  background: #f2acfc;
+}
+.tag-category3 {
+  color: #56c108;
+  background: #95d865;
+}
+.tag-category4 {
+  color: #a4b800;
+  background: #cbd86c;
+}
+.tag-category5 {
+  color: #c438e8;
+  background: #f2acfc;
+}
+.tag-category6 {
+  color: #18c4c7;
+  background: #74c9ca;
+}
+.tag-category7 {
+  color: #ff0b67;
+  background: #f887b3;
 }
 
 .tag-warning {
   background: #fff1d7;
-  color: #ff9800;
+  color: #fff1d7;
 }
 
 .feed-alert {

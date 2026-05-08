@@ -1,4 +1,4 @@
-const API_URL = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Admin/dashboard";
+/*const API_URL = "https://xw9ox0faec.execute-api.us-east-1.amazonaws.com/prod/Admin/dashboard";
 
 document.addEventListener('DOMContentLoaded', fetchDashboardData);
 
@@ -16,6 +16,70 @@ async function fetchDashboardData() {
         console.error("Error fetching dashboard data:", error);
     }
 }
+*/
+document.addEventListener('DOMContentLoaded', fetchDashboardData);
+async function fetchDashboardData() {
+    try {
+        // ⬇️ Mock Data จำลองโครงสร้างข้อมูลจาก Database
+        const data = {
+            stats: {
+                incident_count: 16,
+                complaint_count: 14,
+                pending_cases: 5
+            },
+            categories: [
+                { name: "สถานที่", count: 23, color: "#ff9800" },
+                { name: "บุคลากร", count: 15, color: "#e056f1" },
+                { name: "รถโดยสาร", count: 20, color: "#56c108" },
+                { name: "ระบบ IT", count: 17, color: "#a4b800" },
+                { name: "อุปกรณ์อิเล็กทรอนิกส์", count: 10, color: "#c438e8" },
+                { name: "ร้านค้า", count: 7, color: "#18c4c7" },
+                { name: "อื่นๆ", count: 8, color: "#ff0b67" }
+            ],
+            latest_cases: [
+                {
+                    incident_id: "GU-5868544001",
+                    subject: "เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์",
+                    category: "อุปกรณ์อิเล็กทรอนิกส์",
+                    status: "รอดำเนินการ",
+                    timestamp: "2026-05-08T10:00:00Z"
+                },
+                {
+                    incident_id: "EMG-2471900",
+                    subject: "ท่อประปาแตกบริเวณหน้าอาคารเรียนรวม น้ำไหลท่วมทางเดิน",
+                    category: "สถานที่",
+                    status: "กำลังดำเนินการ",
+                    timestamp: "2026-05-08T09:30:00Z"
+                },
+                {
+                    incident_id: "GU-5868544002",
+                    subject: "เจ้าหน้าที่พูดจาไม่สุภาพขณะขอติดต่อรับเอกสาร",
+                    category: "บุคลากร",
+                    status: "เสร็จสิ้น",
+                    timestamp: "2026-05-07T14:15:00Z"
+                }
+            ]
+        };
+
+        if (data.stats) {
+            updateStatsUI(data.stats);
+            renderSummaryCards(data.stats);
+        }
+        
+        if (data.categories && data.categories.length) { 
+            renderCategoryList(data.categories); 
+            drawPieChart(data.categories); 
+        }
+
+        renderLatestCases(data.latest_cases || []);
+
+        console.log("โหลดข้อมูลและแสดงผลสำเร็จ");
+
+    } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+    }
+}
+
 
 // ---------- Stats / Sidebar ----------
 function updateStatsUI(stats) {
@@ -30,14 +94,18 @@ function renderSummaryCards(stats) {
     const container = document.getElementById('summaryCards');
     if (!container) return;
     const cards = [
-        { label: 'แจ้งเหตุทั้งหมด', value: stats.incident_count  || 0, color: '#4D96FF' },
-        { label: 'ร้องเรียนทั้งหมด', value: stats.complaint_count || 0, color: '#FF6B6B' },
-        { label: 'รอดำเนินการ',       value: stats.pending_cases   || 0, color: '#FFD93D' },
+        { label: "ทั้งหมด", count: 50, icon: "", bg: "#3f79d0" },
+        { label: "รอดำเนินการ", count: 17, icon: "✳", bg: "#e53d39" },
+        { label: "กำลังดำเนินการ", count: 33, icon: "🔧", bg: "#efc84b" },
+        { label: "เสร็จสิ้น", count: 29, icon: "✓", bg: "#4d7f4f" },
     ];
     container.innerHTML = cards.map(card => `
-        <div class="summary-card">
-            <div class="summary-card-value" style="color:${card.color}">${card.value}</div>
-            <div class="summary-card-label">${card.label}</div>
+        <div class="summary-card" style="background-color: ${card.bg};">
+          <div class="summary-left">
+            <div class="summary-label">${card.label}</div>
+            <div class="summary-value">${card.count}</div>
+          </div>
+          <div class="summary-icon">${card.icon}</div>
         </div>`).join('');
 }
 
@@ -45,11 +113,12 @@ function renderSummaryCards(stats) {
 function renderCategoryList(categories) {
     const listEl = document.getElementById('categoryList');
     if (!listEl) return;
+    
     listEl.innerHTML = categories.map(cat => `
-        <div class="category-item">
-            <span class="dot" style="background-color:${cat.color}"></span>
-            <span class="name">${cat.name}</span>
-            <span class="percent">${cat.count} รายการ</span>
+        <div class="category-item" style="display: flex; align-items: center; margin-bottom: 8px;">
+            <span class="dot" style="background-color:${cat.color}; width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px;"></span>
+            <span class="name" style="flex: 1;">${cat.name}</span>
+            <span class="percent" style="font-weight: bold;">${cat.count} รายการ</span>
         </div>`).join('');
 }
 
@@ -88,28 +157,65 @@ function getCoords(percent, cx, cy, r) {
 function renderLatestCases(cases) {
     const feedList = document.getElementById('feedList');
     if (!feedList) return;
+    
     if (!cases.length) {
         feedList.innerHTML = '<p style="text-align:center;padding:20px;">ไม่มีรายการใหม่</p>';
         return;
     }
+    const categoryClassMap = {
+        "สถานที่": "tag-category1",
+        "บุคลากร": "tag-category2",
+        "รถโดยสาร": "tag-category3",
+        "ระบบ IT": "tag-category4",
+        "อุปกรณ์อิเล็กทรอนิกส์": "tag-category5",
+        "ร้านค้า": "tag-category6",
+        "อื่นๆ": "tag-category7"
+    };
+
     feedList.innerHTML = cases.map(item => {
         const id      = item.incident_id || item.complaint_id || '-';
         const subject = item.subject || 'แจ้งเหตุ / ร้องเรียน';
         const cat     = item.category || '';
         const status  = item.status   || '';
         const ts      = item.timestamp ? formatTimestamp(item.timestamp) : '';
+        
+        //กำหนดสีตามสถานะ
+        let sideColor = "side-green";
+        if (status === "รอดำเนินการ") sideColor = "side-red";
+        else if (status === "กำลังดำเนินการ") sideColor = "side-yellow";
+
+        //สร้าง Tags แสดงหมวดหมู่
+        //ถ้าไม่เจอในเงื่อนไข ให้ใช้ tag-category7 เป็นค่าเริ่มต้น
+        const tagCssClass = categoryClassMap[cat] || "tag-category7";
+        const tagsHtml = `<span class="feed-tag ${tagCssClass}">${cat}</span>`;
+
+
+        // ตรวจสอบว่ามีเคสซ้ำหรือไม่ item.is_duplicate (ดึงจาก API อันนี้ mock ไว้ก่อน)
+        const hasAlert = item.is_duplicate === true || id === "GU-5868544001"; 
+
         return `
-        <div class="feed-item">
-            <div class="feed-info">
-                <div class="feed-subject">${subject}</div>
-                <div class="feed-meta">
-                    <span class="feed-id">ID: ${id}</span>
-                    ${cat    ? `<span class="feed-category">${cat}</span>`    : ''}
-                    ${status ? `<span class="feed-status">${status}</span>`   : ''}
-                    ${ts     ? `<span class="feed-time">${ts}</span>`         : ''}
-                </div>
-            </div>
-            <button class="view-btn" type="button" onclick="viewDetail('${id}')">ดูรายละเอียด</button>
+        <div class="feed-row" style="cursor: pointer;" onclick="viewDetail('${id}')">
+          <div class="feed-side ${sideColor}"></div>
+
+          <div class="feed-main">
+            <div class="feed-title">${subject}</div>
+            <div class="feed-code">${id}</div>
+            <div class="feed-tags">${tagsHtml}</div>
+          </div>
+
+          <div class="feed-alert">
+            ${
+              hasAlert
+                ? `<button type="button" class="alert-chip" onclick="event.stopPropagation(); openSimilarCases('${id}')">
+                    <span class="alert-icon">⚠</span>
+                    <span>พบเคสซ้ำ</span>
+                    <span class="alert-badge">5</span>
+                  </button>`
+                : ``
+            }
+          </div>
+
+          <div class="feed-time">${ts}</div>
         </div>`;
     }).join('');
 }
@@ -128,14 +234,14 @@ function viewDetail(id) {
     window.location.href = `views/caseDetail.html?id=${id}`;
 }
 
-// ---------- Similar Cases Overlay (original UI) ----------
+// ---------- Similar Cases Overlay ----------
 const overlay         = document.getElementById('similarCasesOverlay');
 const closeBtn        = document.getElementById('closeSimilarCasesBtn');
 const toggleDetailBtn = document.getElementById('toggleSimilarDetailBtn');
 const bottomToggleBtn = document.getElementById('bottomToggleSimilarBtn');
 const detailPanel     = document.getElementById('similarCaseDetail');
 
-if (closeBtn) {
+if (closeBtn && overlay) {
     closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
 }
 if (toggleDetailBtn && detailPanel) {
