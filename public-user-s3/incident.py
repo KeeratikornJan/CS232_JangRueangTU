@@ -60,11 +60,11 @@ def lambda_handler(event, context):
         # ส่วนจัดการข้อมูล: บันทึกลง DynamoDB
         item = {
             'incident_id': incident_id,
-            'category': data.get('category'),
             'firstname': data.get('firstname'),
             'lastname': data.get('lastname'),
             'email': data.get('email'),
             'phone': data.get('phone'),
+            'id_card': data.get('id_card'),
             'subject': data.get('subject'),
             'location': data.get('location'),
             'details': data.get('details'),
