@@ -339,6 +339,19 @@ function closeCaseDetail() {
 
 // ---------- Similar Cases Overlay ----------
 
+function formatThaiMonthYear(ts) {
+    if (!ts) return '-';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '-';
+    const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    return `เดือน ${months[d.getMonth()]} ปี ${d.getFullYear() + 543}`;
+}
+
+function closeSimilarCases() {
+    document.getElementById('similarCasesOverlay').classList.add('hidden');
+}
+
 function openSimilarCases(id) {
     const panel   = document.getElementById('similarCasesPanel');
     const overlay = document.getElementById('similarCasesOverlay');
@@ -346,6 +359,15 @@ function openSimilarCases(id) {
 
     const thisCase = MOCK_API.find(i => (i.complaint_id || i.incident_id) === id);
     if (!thisCase) return;
+
+    if (!overlay._closeSetup) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                closeSimilarCases();
+            }
+        });
+        overlay._closeSetup = true;
+    }
 
     const similar  = MOCK_API.filter(i =>
         i.category === thisCase.category && (i.complaint_id || i.incident_id) !== id
@@ -374,7 +396,7 @@ function openSimilarCases(id) {
                 <div class="summary-text">📍 ${thisCase.location || '-'}</div>
               </div>
               <div class="summary-item">
-                <div class="summary-text">${formatTimestamp(thisCase.timestamp)}</div>
+                <div class="summary-text">${formatThaiMonthYear(thisCase.timestamp)}</div>
               </div>
             </div>
           </div>
@@ -386,13 +408,12 @@ function openSimilarCases(id) {
                 <div class="similar-case-main-title">${item.subject || '-'}</div>
                 <div class="similar-case-tags">
                   <span class="similar-tag similar-tag-green">${type}</span>
+                  <span class="similar-tag similar-tag-pink"></span>
                 </div>
               </div>
               <div class="similar-case-right">
-                <div class="similar-case-time">${formatTimestamp(item.timestamp)}</div>
-                <button type="button" class="similar-action-btn arrow-btn" id="toggleSimilarDetailBtn">˄</button>
                 <div class="similar-case-number">${currentIndex + 1}</div>
-                <button type="button" class="similar-action-btn close-btn" id="closeSimilarCasesBtn">×</button>
+                <div class="similar-case-time">${formatTimestamp(item.timestamp)}</div>
               </div>
             </div>
 
@@ -425,7 +446,7 @@ function openSimilarCases(id) {
                   </div>
                 </div>
                 <div class="similar-image-box">
-                  <span class="similar-image-icon">🖼️</span>
+                  <span class="material-symbols-outlined similar-image-icon">image</span>
                 </div>
               </div>
             </div>
@@ -433,27 +454,26 @@ function openSimilarCases(id) {
 
           <div class="similar-cases-footer">
             <div class="similar-pagination">
-              <button type="button" class="pagination-arrow" id="prevCaseBtn">≪</button>
+              <button type="button" class="pagination-arrow" id="prevCaseBtn"><span class="material-symbols-outlined">keyboard_arrow_left</span></button>
               <div class="pagination-dots">
                 ${allCases.map((_, i) => `<span class="pagination-dot${i === currentIndex ? ' active' : ''}"></span>`).join('')}
               </div>
-              <button type="button" class="pagination-arrow" id="nextCaseBtn">≫</button>
+              <button type="button" class="pagination-arrow" id="nextCaseBtn"><span class="material-symbols-outlined">keyboard_arrow_right</span></button>
             </div>
-            <button type="button" class="similar-bottom-toggle" id="bottomToggleSimilarBtn">˄</button>
+            <button type="button" class="similar-bottom-toggle" id="bottomToggleSimilarBtn">
+              <span class="material-symbols-outlined">expand_less</span>
+            </button>
           </div>
         `;
 
-        document.getElementById('closeSimilarCasesBtn').addEventListener('click', () => overlay.classList.add('hidden'));
+        const detailEl     = document.getElementById('similarCaseDetail');
+        const bottomToggle = document.getElementById('bottomToggleSimilarBtn');
 
-        const toggleBtn = document.getElementById('toggleSimilarDetailBtn');
-        const detailEl  = document.getElementById('similarCaseDetail');
-        toggleBtn.addEventListener('click', () => {
+        bottomToggle.addEventListener('click', () => {
             const collapsed = detailEl.classList.toggle('collapsed');
-            toggleBtn.textContent = collapsed ? '˅' : '˄';
-        });
-
-        document.getElementById('bottomToggleSimilarBtn').addEventListener('click', () => {
-            overlay.classList.toggle('collapsed');
+            bottomToggle.innerHTML = collapsed
+                ? '<span class="material-symbols-outlined">expand_more</span>'
+                : '<span class="material-symbols-outlined">expand_less</span>';
         });
 
         document.getElementById('prevCaseBtn').addEventListener('click', () => {

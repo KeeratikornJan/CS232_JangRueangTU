@@ -127,9 +127,19 @@ function savePopupData() {
     closePopup();
 }
 
+function toMs(ts) {
+    if (!ts) return 0;
+    const t = new Date(ts).getTime();
+    return isNaN(t) ? 0 : t;
+}
+
 function sortIncidents() {
-    const sorted = [...incidents];
-    if (sortSelect.value === "oldest") sorted.reverse();
+    const oldest = sortSelect.value === "oldest";
+    const sorted = [...incidents].sort((a, b) => {
+        const tA = toMs(a.eventTimestamp || a.timestamp);
+        const tB = toMs(b.eventTimestamp || b.timestamp);
+        return oldest ? tA - tB : tB - tA;
+    });
     renderIncidents(sorted);
 }
 

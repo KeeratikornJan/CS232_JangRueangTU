@@ -90,6 +90,8 @@ function mapDbToUI(item) {
         incidentTime: item.event_time && item.event_time.includes("T") ? item.event_time.split("T")[1] : "-",
         image: item.image_url_presigned || item.image_url || "",
         department: item.department || "",
-        note: item.note || ""
+        note: item.note || "",
+        timestamp: item.timestamp || "",
+        eventTimestamp: item.event_time || item.timestamp || ""
     };
 }

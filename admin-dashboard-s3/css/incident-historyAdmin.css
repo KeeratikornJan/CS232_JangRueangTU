@@ -13,7 +13,11 @@
   position: relative;
   z-index: 1;
 }
-
+.sidebar-link-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .sidebar-submenu {
   display: block;
   text-decoration: none;

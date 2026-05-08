@@ -71,6 +71,20 @@ const MOCK_API = [
         id_card: "1-9876-54321-00-9",
         event_time: "2026-05-08T11:15:00",
         image_url_presigned: "", department: "", note: ""
+    },
+    {
+        incident_id: "EMG-2471901",
+        subject: "พบสุนัขจรจัดไล่กวดนักศึกษาบริเวณโรงอาหารกลาง",
+        category: "อื่นๆ",
+        status: "pending",
+        timestamp: "2026-05-08T11:20:00Z",
+        location: "โรงอาหารกลาง",
+        details: "มีสุนัขจรจัดหลายตัวบริเวณโรงอาหารกลาง และมีพฤติกรรมวิ่งไล่นักศึกษาบางคน ทำให้รู้สึกไม่ปลอดภัย และควรมีการเข้าตรวจสอบโดยด่วน",
+        firstname: "วิชัย", lastname: "รักสงบ",
+        email: "wichai@email.com", phone: "081-999-8888",
+        id_card: "1-9876-54321-00-9",
+        event_time: "2026-05-06T11:15:00",
+        image_url_presigned: "", department: "", note: ""
     }
 ];
 

@@ -48,6 +48,9 @@ function filterComplaints() {
         const matchStatus   = currentStatusFilter   === "ทั้งหมด" || normalizedStatus === currentStatusFilter;
         const matchCategory = currentCategoryFilter === "ทั้งหมด" || item.category    === currentCategoryFilter;
         return matchStatus && matchCategory;
+    }).sort((a, b) => {
+        const toMs = ts => { if (!ts) return 0; const t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; };
+        return toMs(b.eventTimestamp || b.timestamp) - toMs(a.eventTimestamp || a.timestamp);
     });
 }
 
