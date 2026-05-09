@@ -1,9 +1,20 @@
 // Admin dashboard – stats, pie chart, latest cases feed (live data only).
 let DASHBOARD_CASES = [];
+let feedCases     = [];
+let feedSortOrder = 'latest';
 
 document.addEventListener('DOMContentLoaded', () => {
     createCaseDetailPopup();
     fetchDashboardData();
+
+    document.getElementById('feedSortBtn').addEventListener('click', () => {
+        feedSortOrder = feedSortOrder === 'latest' ? 'oldest' : 'latest';
+        const btn = document.getElementById('feedSortBtn');
+        btn.innerHTML = feedSortOrder === 'latest'
+            ? '⇅ <span>ล่าสุด</span>'
+            : '⇅ <span>เก่าสุด</span>';
+        sortAndRenderFeed();
+    });
 });
 
 function computeDashboardData(rawItems) {
@@ -62,7 +73,8 @@ async function fetchDashboardData() {
         }));
         renderCategoryList(categoriesWithColor);
         drawPieChart(categoriesWithColor);
-        renderLatestCases(data.latest_cases);
+        feedCases = rawItems.filter(i => i.timestamp);
+        sortAndRenderFeed();
     } catch (error) {
         console.error("Error fetching dashboard data:", error);
         const feed = document.getElementById('feedList');
@@ -177,6 +189,16 @@ function renderLatestCases(cases) {
           <div class="feed-time">${ts}</div>
         </div>`;
     }).join('');
+}
+
+function sortAndRenderFeed() {
+    const sorted = [...feedCases]
+        .sort((a, b) => {
+            const diff = new Date(b.timestamp) - new Date(a.timestamp);
+            return feedSortOrder === 'latest' ? diff : -diff;
+        })
+        .slice(0, 10);
+    renderLatestCases(sorted);
 }
 
 function createCaseDetailPopup() {
