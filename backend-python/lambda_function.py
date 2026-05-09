@@ -11,6 +11,12 @@ Storage:
     DynamoDB table : CS232ProjectData          (PK: complaint_id, type STRING)
     S3 bucket      : cs232-complaint-images-10 (objects under complaints/* or incidents/*)
 
+Notifications:
+    SNS topic      : SNS_TOPIC_ARN (env var or constant). On every successful
+                     POST the admin subscriber list receives an email with the
+                     case subject, location, and user email. Publish failures
+                     are logged and swallowed so DDB writes always succeed.
+
 Runtime configuration is read from environment variables so the same artefact
 can be deployed to multiple stages without touching code.
 """
@@ -31,10 +37,20 @@ TABLE_NAME = os.environ.get("DDB_TABLE", "CS232ProjectData")
 S3_BUCKET = os.environ.get("S3_BUCKET", "cs232-complaint-images-10")
 PRESIGN_EXPIRES = int(os.environ.get("PRESIGN_EXPIRES", "3600"))
 
+# --- SNS ----------------------------------------------------------------------
+# Drop the actual Topic ARN here (or set the SNS_TOPIC_ARN env var on the
+# Lambda). When the env var is present it always wins, so production deploys
+# don't need a code change.
+SNS_TOPIC_ARN = os.environ.get(
+    "SNS_TOPIC_ARN",
+    "arn:aws:sns:us-east-1:770235943170:CS232ComplaintNotification",
+)
+
 dynamodb = boto3.resource("dynamodb", region_name=REGION)
 table = dynamodb.Table(TABLE_NAME)
 # signature_version='s3v4' is required for presigned GETs in most regions.
 s3 = boto3.client("s3", region_name=REGION, config=BotoConfig(signature_version="s3v4"))
+sns = boto3.client("sns", region_name=REGION)
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -155,9 +171,20 @@ def _handle_post(event):
     }
 
     table.put_item(Item=item)
+
+    # Fire the admin notification AFTER the DDB write succeeds. Any failure here
+    # must not break the user-facing 200 response — the case is already saved.
+    sns_published = _publish_new_case_notification(item)
+
     return _respond(
         200,
-        {"status": "success", "complaint_id": complaint_id, "type": raw_type, "image_url": image_url},
+        {
+            "status": "success",
+            "complaint_id": complaint_id,
+            "type": raw_type,
+            "image_url": image_url,
+            "notification_sent": sns_published,
+        },
     )
 
 
@@ -205,6 +232,67 @@ def _upload_image(complaint_id, file_data, file_name, kind):
         CacheControl="public, max-age=31536000",
     )
     return f"https://{S3_BUCKET}.s3.{REGION}.amazonaws.com/{key}"
+
+
+def _publish_new_case_notification(item):
+    """Send an admin email via SNS when a new case is created.
+
+    Returns True on success, False on any failure. The exception is logged but
+    swallowed — DynamoDB has already accepted the record, so a transient SNS
+    issue must never propagate back to the caller.
+    """
+    if not SNS_TOPIC_ARN or SNS_TOPIC_ARN == "YOUR_SNS_TOPIC_ARN_HERE":
+        print("[sns] SNS_TOPIC_ARN is not configured — skipping notification.")
+        return False
+
+    kind_label = "Emergency / แจ้งเหตุ" if item.get("type") == "incident" else "Complaint / ร้องเรียน"
+    subject_line = f"[JANGRUEANG TU] New {kind_label}: {item.get('subject') or '(no subject)'}"
+    # SNS email subjects are capped at 100 chars and must be ASCII-only.
+    subject_line = "".join(ch if 32 <= ord(ch) < 127 else "?" for ch in subject_line)[:100]
+
+    user_email = item.get("email") or "(not provided)"
+    body_lines = [
+        "A new case has just been submitted via JANGRUEANG TU.",
+        "",
+        f"Case ID    : {item.get('complaint_id', '-')}",
+        f"Type       : {item.get('type', '-')}",
+        f"Category   : {item.get('category', '-')}",
+        f"Subject    : {item.get('subject') or '-'}",
+        f"Location   : {item.get('location') or '-'}",
+        f"User Email : {user_email}",
+        f"Event Time : {item.get('event_time') or '-'}",
+        f"Submitted  : {item.get('timestamp', '-')}",
+        "",
+        f"Reporter   : {item.get('fullname') or '-'} ({item.get('phone') or '-'})",
+        f"Details    : {item.get('details') or '-'}",
+    ]
+    if item.get("image_url"):
+        body_lines.append(f"Image      : {item['image_url']}")
+    body_text = "\n".join(body_lines)
+
+    try:
+        response = sns.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject=subject_line,
+            Message=body_text,
+            MessageAttributes={
+                "case_type":   {"DataType": "String", "StringValue": item.get("type") or "complaint"},
+                "case_id":     {"DataType": "String", "StringValue": item.get("complaint_id") or ""},
+                "user_email":  {"DataType": "String", "StringValue": user_email},
+            },
+        )
+        print(f"[sns] Published notification: MessageId={response.get('MessageId')}")
+
+        # User confirmation: log-only acknowledgement. SNS itself can't email
+        # an arbitrary recipient unless they're already subscribed to a topic,
+        # so we keep this as an audit log line that CloudWatch can capture.
+        if user_email and user_email != "(not provided)":
+            print(f"[sns] Acknowledged submitter: {user_email} for case {item.get('complaint_id')}")
+
+        return True
+    except Exception as exc:  # noqa: BLE001 — never break the caller
+        print(f"[sns] publish failed for case {item.get('complaint_id')}: {exc}")
+        return False
 
 
 def _attach_presigned_url(item):
