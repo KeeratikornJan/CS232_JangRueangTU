@@ -41,8 +41,10 @@ window.DEPARTMENT_OPTIONS = [
     })();
 
     function authHeaders() {
-        const token = sessionStorage.getItem("idToken")
+        const token = sessionStorage.getItem("id_token")
+            || sessionStorage.getItem("idToken")
             || sessionStorage.getItem("accessToken")
+            || localStorage.getItem("id_token")
             || localStorage.getItem("idToken")
             || "";
         if (!token) {

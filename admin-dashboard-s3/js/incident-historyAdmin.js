@@ -10,15 +10,26 @@ let popupReporterName, popupReporterEmail, popupReporterId, popupReporterPhone;
 let popupIncidentDate, popupIncidentTime, popupImage, popupImagePlaceholder;
 let popupDepartmentSelect, popupNote;
 
+// History page mirrors incidentAdmin.js: any incident that has been received
+// (status is anything other than "pending" / "รอดำเนินการ" / "ใหม่", or that
+// already has a department assigned) belongs here. We accept the legacy
+// "resolved" / "เสร็จสิ้น" tokens as well for back-compat with older rows.
+function _isHistoryIncident(item) {
+    const s = (item.status || "").toString().trim().toLowerCase();
+    if (!s) return false;
+    if (s === "pending" || s === "ใหม่" || s === "รอดำเนินการ") return false;
+    return true;
+}
+
 async function fetchHistoryData() {
     try {
-        const rawData = await window.AppAPI.loadCases();
+        // Force a fresh fetch — when the user lands here right after assigning
+        // an incident on the previous page, the in-memory cache may still hold
+        // the pre-assignment snapshot.
+        const rawData = await window.AppAPI.loadCases({ refresh: true });
         historyItems = rawData
             .filter(item => window.AppAPI.isIncident(item))
-            .filter(item => {
-                const s = (item.status || "").toLowerCase();
-                return s === "resolved" || s === "completed" || s === "success" || s === "เสร็จสิ้น";
-            })
+            .filter(_isHistoryIncident)
             .map(mapDbToUI)
             .map(toHistoryRow);
         renderHistoryRows(historyItems);

@@ -11,10 +11,20 @@ let popupReporterName, popupReporterEmail, popupReporterId, popupReporterPhone;
 let popupIncidentDate, popupIncidentTime, popupImage, popupImagePlaceholder;
 let popupDepartmentSelect, popupNote;
 
+function isPendingStatus(status) {
+    const s = (status || "").toLowerCase();
+    return s === "" || s === "pending" || s === "ใหม่" || s === "รอดำเนินการ";
+}
+
 async function fetchIncidentsData() {
     try {
         const rawData = await window.AppAPI.loadCases();
-        incidents = rawData.filter(item => window.AppAPI.isIncident(item)).map(mapDbToUI);
+        // Only pending incidents appear on the live board. Anything that has
+        // already been received (status != pending) lives on the History page.
+        incidents = rawData
+            .filter(item => window.AppAPI.isIncident(item))
+            .filter(item => isPendingStatus(item.status))
+            .map(mapDbToUI);
         sortIncidents();
     } catch (error) {
         console.error("Error fetching incidents:", error);
@@ -108,20 +118,36 @@ function closePopup() {
 
 async function savePopupData() {
     if (!currentSelectedIncident) return;
+    const dept = popupDepartmentSelect.value || "";
+    if (!dept) { alert("กรุณาเลือกหน่วยงาน"); return; }
+    // Receiving an incident closes it on the live board — it is moved to the
+    // ประวัติการแจ้งเหตุ (history) view immediately. Status is set to
+    // "resolved" so the existing history filter picks it up.
     const payload = {
         complaint_id: currentSelectedIncident.id,
-        department: popupDepartmentSelect.value || "",
+        department: dept,
         note: popupNote.value || "",
-        status: "in_progress"
+        status: "resolved"
     };
     popupSaveBtn.disabled = true;
     try {
         await window.AppAPI.updateCase(payload);
+        const movedId = currentSelectedIncident.id;
         currentSelectedIncident.department = payload.department;
         currentSelectedIncident.note = payload.note;
         currentSelectedIncident.status = payload.status;
-        alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+        if (currentSelectedIncident.raw) {
+            currentSelectedIncident.raw.department = payload.department;
+            currentSelectedIncident.raw.note = payload.note;
+            currentSelectedIncident.raw.status = payload.status;
+        }
+        alert("รับเรื่องเรียบร้อย ระบบย้ายเคสไปที่ประวัติการแจ้งเหตุแล้ว");
         closePopup();
+        // Drop the assigned incident from the live grid right away.
+        incidents = incidents.filter(it => it.id !== movedId);
+        sortIncidents();
+        if (window.AppAPI && window.AppAPI.invalidate) window.AppAPI.invalidate();
+        if (typeof refreshSidebarCounts === "function") refreshSidebarCounts();
     } catch (err) {
         alert("บันทึกไม่สำเร็จ: " + err.message);
     } finally {

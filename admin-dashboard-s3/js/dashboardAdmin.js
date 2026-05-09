@@ -18,11 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function computeDashboardData(rawItems) {
+    const isPending = i => ['', 'pending', 'รอดำเนินการ', 'ใหม่'].includes((i.status || '').toLowerCase());
     const complaints = rawItems.filter(i => window.AppAPI.isComplaint(i));
     const incidents = rawItems.filter(i => window.AppAPI.isIncident(i));
-    const pending = rawItems.filter(i =>
-        ['pending', 'รอดำเนินการ', 'ใหม่'].includes((i.status || '').toLowerCase())
-    ).length;
+    // Sidebar badges should reflect *pending* work only — the same definition
+    // used by refreshSidebarCounts in admin.js.
+    const pendingComplaints = complaints.filter(isPending).length;
+    const pendingIncidents = incidents.filter(isPending).length;
+    const pending = rawItems.filter(isPending).length;
     const inProgress = rawItems.filter(i =>
         ['in_progress', 'กำลังดำเนินการ', 'กำลังดำเนิน'].includes((i.status || '').toLowerCase())
     ).length;
@@ -48,6 +51,8 @@ function computeDashboardData(rawItems) {
         stats: {
             incident_count: incidents.length,
             complaint_count: complaints.length,
+            sidebar_incident_count: pendingIncidents,
+            sidebar_complaint_count: pendingComplaints,
             pending_cases: pending,
             in_progress_cases: inProgress,
             resolved_cases: resolved
@@ -83,10 +88,11 @@ async function fetchDashboardData() {
 }
 
 function updateStatsUI(stats) {
-    const sideIncidents = document.querySelector('a[href$="incidentAdmin.html"] .count-badge');
-    const sideComplaints = document.querySelector('a[href$="complaintsAdmin.html"] .count-badge');
-    if (sideIncidents) sideIncidents.textContent = stats.incident_count || 0;
-    if (sideComplaints) sideComplaints.textContent = stats.complaint_count || 0;
+    // Sidebar badges count *pending only* — must match admin.js logic.
+    const incidentBadges = document.querySelectorAll('a[href$="incidentAdmin.html"] .count-badge, #sidebarIncidentCount');
+    const complaintBadges = document.querySelectorAll('a[href$="complaintsAdmin.html"] .count-badge, #sidebarComplaintCount');
+    incidentBadges.forEach(el => { el.textContent = stats.sidebar_incident_count || 0; });
+    complaintBadges.forEach(el => { el.textContent = stats.sidebar_complaint_count || 0; });
 }
 
 function renderSummaryCards(stats) {

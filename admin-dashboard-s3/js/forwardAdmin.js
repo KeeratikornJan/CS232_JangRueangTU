@@ -138,7 +138,7 @@ function deptOptionsHtml() {
         + (window.DEPARTMENT_OPTIONS || []).map(d => `<option value="${d}">${d}</option>`).join("");
 }
 
-function createPopup() {
+/*function createPopup() {
     const overlay = document.createElement("div");
     overlay.className = "popup-overlay";
     overlay.id = "popupOverlay";
@@ -230,5 +230,5 @@ function createPopup() {
     document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
 }
 
-createPopup();
+createPopup();*/
 fetchForwardData();

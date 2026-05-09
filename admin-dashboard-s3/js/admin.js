@@ -102,6 +102,14 @@ function _writeSidebarBadge(kind, value) {
     _sidebarBadges(kind).forEach(el => { el.textContent = String(value); });
 }
 
+// Sidebar badges only surface "new" incoming work — cases still in the
+// pending bucket. In-progress and resolved cases are excluded so the badge
+// reflects the actionable backlog, not historical volume.
+function _isPendingCase(item) {
+    const s = (item && item.status ? item.status : "").toString().trim().toLowerCase();
+    return s === "" || s === "pending" || s === "ใหม่" || s === "รอดำเนินการ";
+}
+
 async function refreshSidebarCounts() {
     // Always blank the static placeholders first so the stale "14" / "16" from
     // the HTML never survives a failed or slow API call. Counter variables are
@@ -116,6 +124,7 @@ async function refreshSidebarCounts() {
         let incidentCount = 0;
         let complaintCount = 0;
         for (const it of items) {
+            if (!_isPendingCase(it)) continue;
             if (window.AppAPI.isIncident(it)) incidentCount += 1;
             else if (window.AppAPI.isComplaint(it)) complaintCount += 1;
         }
@@ -153,4 +162,35 @@ function setCaseImage(img, url) {
 document.addEventListener('DOMContentLoaded', refreshSidebarCounts);
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('img.popup-image, img[data-case-image]').forEach(applyImageCorsAttrs);
+});
+
+// --- Profile avatar / logo → custom LoginPage.html -------------------------
+// Clicking the avatar in the topbar should always land on our self-hosted
+// login form, never the Cognito Hosted UI. We clear any stored tokens first
+// so the user reaches the form unauthenticated, then navigate using a path
+// that works from both the dashboard root and the views/ subdirectory.
+function _loginPageHref() {
+    // dashboardAdmin.html lives at the dashboard root; everything else under
+    // views/. Detect via the current pathname rather than hard-coding either.
+    const path = (window.location.pathname || '').toLowerCase();
+    return path.indexOf('/views/') >= 0 ? 'LoginPage.html' : 'views/LoginPage.html';
+}
+
+function _clearAuthTokens() {
+    ['id_token', 'idToken', 'accessToken', 'tokenExpiresAt', 'cognitoUsername']
+        .forEach(k => { sessionStorage.removeItem(k); });
+}
+
+function goToLoginPage(event) {
+    if (event) event.preventDefault();
+    _clearAuthTokens();
+    window.location.href = _loginPageHref();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const target = _loginPageHref();
+    document.querySelectorAll('a.topbar-left').forEach(a => {
+        a.setAttribute('href', target);
+        a.addEventListener('click', goToLoginPage);
+    });
 });

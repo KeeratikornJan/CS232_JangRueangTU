@@ -25,19 +25,62 @@ async function fetchComplaintsData() {
     }
 }
 
+// Lower number = higher priority. "รอดำเนินการ" / pending must always lead.
+function statusPriority(status) {
+    const s = (status || "").toLowerCase();
+    if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") return 0;
+    if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") return 1;
+    if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed" || s === "success") return 2;
+    return 3;
+}
+
+// The DB `timestamp` is the canonical recency signal — set by the Lambda when
+// the record is created. It arrives as ISO-8601 with microseconds and an
+// offset, e.g. "2026-05-09T06:21:33.653229+00:00". Older Safari / embedded
+// WebViews reject 6-digit fractional seconds and produce `Invalid Date`,
+// silently breaking the sort. Strip everything after the first dot, drop a
+// trailing "Z" if present, and Date can parse the remainder everywhere.
+const parseTime = (item) => {
+    const dateStr = (item && (item.timestamp || item.event_time || item.eventTimestamp)) || 0;
+    if (!dateStr) return 0;
+    // Strip everything after the dot to handle microseconds
+    const cleanStr = dateStr.toString().split('.')[0].replace('Z', '');
+    const ts = new Date(cleanStr).getTime();
+    return isNaN(ts) ? 0 : ts;
+};
+
 function filterComplaints() {
-    return complaints.filter(item => {
+    const filtered = complaints.filter(item => {
         const s = (item.status || "").toLowerCase();
         let normalized = item.status;
         if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") normalized = "ใหม่";
         else if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") normalized = "กำลังดำเนิน";
-        else if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed") normalized = "เสร็จสิ้น";
+        else if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed" || s === "success") normalized = "เสร็จสิ้น";
         const matchStatus = currentStatusFilter === "ทั้งหมด" || normalized === currentStatusFilter;
         const matchCategory = currentCategoryFilter === "ทั้งหมด" || item.category === currentCategoryFilter;
         return matchStatus && matchCategory;
-    }).sort((a, b) => {
-        const toMs = ts => { if (!ts) return 0; const t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; };
-        return toMs(b.eventTimestamp || b.timestamp) - toMs(a.eventTimestamp || a.timestamp);
+    });
+
+    // Verification: log the subject + computed timestamp for each item so the
+    // sort key can be inspected in the browser console.
+    console.groupCollapsed("[complaintsAdmin] sort keys");
+    filtered.forEach(item => {
+        console.log(
+            `subject="${item.title || item.subject || ""}"`,
+            "status=", item.status,
+            "parseTime=", parseTime(item),
+            "(", new Date(parseTime(item)).toISOString(), ")"
+        );
+    });
+    console.groupEnd();
+
+    return filtered.sort((a, b) => {
+        // 1st Criteria: status (Pending = 1, In Progress = 2, Resolved = 3).
+        const pa = statusPriority(a.status);
+        const pb = statusPriority(b.status);
+        if (pa !== pb) return pa - pb;
+        // 2nd Criteria: parseTime(item) descending — newest first.
+        return parseTime(b) - parseTime(a);
     });
 }
 
@@ -105,18 +148,31 @@ function closePopup() {
 
 async function savePopupData() {
     if (!currentSelectedComplaint) return;
+    const dept = popupDepartmentSelect.value || "";
+    if (!dept) { alert("กรุณาเลือกหน่วยงาน"); return; }
+    // Assigning a department implicitly transitions the case to "in_progress".
     const payload = {
         complaint_id: currentSelectedComplaint.id,
-        department: popupDepartmentSelect.value || "",
-        note: popupNote.value || ""
+        department: dept,
+        note: popupNote.value || "",
+        status: "in_progress"
     };
     popupSaveBtn.disabled = true;
     try {
         await window.AppAPI.updateCase(payload);
         currentSelectedComplaint.department = payload.department;
         currentSelectedComplaint.note = payload.note;
+        currentSelectedComplaint.status = payload.status;
+        if (currentSelectedComplaint.raw) {
+            currentSelectedComplaint.raw.department = payload.department;
+            currentSelectedComplaint.raw.note = payload.note;
+            currentSelectedComplaint.raw.status = payload.status;
+        }
         alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
         closePopup();
+        updateView();
+        if (window.AppAPI && window.AppAPI.invalidate) window.AppAPI.invalidate();
+        if (typeof refreshSidebarCounts === "function") refreshSidebarCounts();
     } catch (err) {
         alert("บันทึกไม่สำเร็จ: " + err.message);
     } finally {
