@@ -1,9 +1,17 @@
-const waitingCases = MOCK_FORWARD_CASES;
-const departments  = MOCK_DEPARTMENTS;
+// Admin – หน้าส่งต่อหน่วยงาน (live data: cases without department).
+const FORWARD_TAG = {
+    "สถานที่": "tag-place", "บุคลากร": "tag-person",
+    "รถโดยสาร": "tag-bus", "ระบบ IT": "tag-it",
+    "อุปกรณ์อิเล็กทรอนิกส์": "tag-electronic",
+    "ร้านค้า": "tag-shop", "อื่นๆ": "tag-other"
+};
 
-const waitingList    = document.getElementById("waitingList");
+let waitingCases = [];
+let currentSelectedCase = null;
+
+const waitingList = document.getElementById("waitingList");
 const departmentGrid = document.getElementById("departmentGrid");
-const waitingCount   = document.getElementById("waitingCount");
+const waitingCount = document.getElementById("waitingCount");
 
 let popupOverlay, complaintPopup, popupCloseBtn, popupCancelBtn, popupSaveBtn;
 let popupCaseId, popupLocation, popupTitle, popupDescription;
@@ -11,56 +19,75 @@ let popupReporterName, popupReporterEmail, popupReporterId, popupReporterPhone;
 let popupIncidentDate, popupIncidentTime, popupImage, popupImagePlaceholder;
 let popupDepartmentSelect, popupNote;
 
-let currentSelectedCase = null;
+async function fetchForwardData() {
+    try {
+        const rawData = await window.AppAPI.loadCases();
+        waitingCases = rawData
+            .filter(item => !item.department)
+            .map(mapDbToUI)
+            .map(ui => ({ ...ui, tagClass: FORWARD_TAG[ui.category] || "tag-other" }));
+        renderWaitingCases();
+        renderDepartments(rawData);
+    } catch (error) {
+        console.error("Error fetching forward data:", error);
+        if (waitingList) waitingList.innerHTML = `<p style="color:#c00;padding:24px;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
+    }
+}
 
 function renderWaitingCases() {
-    waitingCount.textContent = `${waitingCases.length + 1} เคส`;
-    waitingList.innerHTML = waitingCases.map((item) => `
+    if (!waitingList || !waitingCount) return;
+    waitingCount.textContent = `${waitingCases.length} เคส`;
+    if (!waitingCases.length) {
+        waitingList.innerHTML = `<p style="text-align:center;padding:24px;">ไม่มีเคสรอมอบหมาย</p>`;
+        return;
+    }
+    waitingList.innerHTML = waitingCases.map(item => `
         <div class="waiting-item" data-id="${item.id}">
           <div class="waiting-bar"></div>
           <div class="waiting-content">
             <div class="waiting-title">${item.title}</div>
             <div class="tag-pill ${item.tagClass}">${item.category}</div>
           </div>
-        </div>
-    `).join("");
-    addWaitingItemEvents();
-}
-
-function renderDepartments() {
-    departmentGrid.innerHTML = departments.map((item) => `
-        <div class="department-card">
-          <div class="department-name">${item.name}</div>
-          <div class="department-count">${item.count}</div>
-          <div class="department-subtext">เคสที่รับอยู่</div>
-        </div>
-    `).join("");
-}
-
-function addWaitingItemEvents() {
-    document.querySelectorAll(".waiting-item").forEach((itemEl) => {
-        itemEl.addEventListener("click", () => {
-            const selected = waitingCases.find((item) => item.id === itemEl.dataset.id);
-            if (selected) openPopup(selected);
+        </div>`).join("");
+    document.querySelectorAll(".waiting-item").forEach(el => {
+        el.addEventListener("click", () => {
+            const item = waitingCases.find(c => c.id === el.dataset.id);
+            if (item) openPopup(item);
         });
     });
 }
 
+function renderDepartments(rawData) {
+    if (!departmentGrid) return;
+    const counts = {};
+    (window.DEPARTMENT_OPTIONS || []).forEach(name => { counts[name] = 0; });
+    rawData.forEach(item => {
+        const dept = item.department;
+        if (dept) counts[dept] = (counts[dept] || 0) + 1;
+    });
+    departmentGrid.innerHTML = Object.entries(counts).map(([name, count]) => `
+        <div class="department-card">
+          <div class="department-name">${name}</div>
+          <div class="department-count">${count}</div>
+          <div class="department-subtext">เคสที่รับอยู่</div>
+        </div>`).join("");
+}
+
 function openPopup(item) {
-    currentSelectedCase            = item;
-    popupCaseId.textContent        = item.id          || "-";
-    popupLocation.textContent      = item.location    || "-";
-    popupTitle.textContent         = item.title       || "-";
-    popupDescription.textContent   = item.description || "-";
-    popupReporterName.textContent  = item.reporterName  || "-";
+    currentSelectedCase = item;
+    popupCaseId.textContent = item.id || "-";
+    popupLocation.textContent = item.location || "-";
+    popupTitle.textContent = item.title || "-";
+    popupDescription.textContent = item.description || "-";
+    popupReporterName.textContent = item.reporterName || "-";
     popupReporterEmail.textContent = item.reporterEmail || "-";
-    popupReporterId.textContent    = item.reporterId    || "-";
+    popupReporterId.textContent = item.reporterId || "-";
     popupReporterPhone.textContent = item.reporterPhone || "-";
-    popupIncidentDate.textContent  = item.incidentDate  || "-";
-    popupIncidentTime.textContent  = item.incidentTime  || "-";
-    popupDepartmentSelect.value    = item.department    || "";
-    popupNote.value                = item.note          || "";
-    if (item.image && item.image.trim() !== "") {
+    popupIncidentDate.textContent = item.incidentDate || "-";
+    popupIncidentTime.textContent = item.incidentTime || "-";
+    popupDepartmentSelect.value = item.department || "";
+    popupNote.value = item.note || "";
+    if (item.image && item.image.trim()) {
         popupImage.src = item.image;
         popupImage.style.display = "block";
         popupImagePlaceholder.style.display = "none";
@@ -82,27 +109,36 @@ function closePopup() {
     document.body.style.overflow = "";
 }
 
-function savePopupData() {
+async function savePopupData() {
     if (!currentSelectedCase) return;
-    currentSelectedCase.department = popupDepartmentSelect.value;
-    currentSelectedCase.note       = popupNote.value;
-    alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
-    closePopup();
+    const dept = popupDepartmentSelect.value || "";
+    if (!dept) { alert("กรุณาเลือกหน่วยงาน"); return; }
+    const payload = {
+        complaint_id: currentSelectedCase.id,
+        department: dept,
+        note: popupNote.value || "",
+        status: "in_progress"
+    };
+    popupSaveBtn.disabled = true;
+    try {
+        await window.AppAPI.updateCase(payload);
+        alert("ส่งต่อหน่วยงานเรียบร้อย");
+        closePopup();
+        window.AppAPI.invalidate();
+        fetchForwardData();
+    } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+    } finally {
+        popupSaveBtn.disabled = false;
+    }
+}
+
+function deptOptionsHtml() {
+    return `<option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>`
+        + (window.DEPARTMENT_OPTIONS || []).map(d => `<option value="${d}">${d}</option>`).join("");
 }
 
 function createPopup() {
-    const DEPT_OPTIONS = `
-        <option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>
-        <option value="กองบริการการศึกษา">กองบริการการศึกษา</option>
-        <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
-        <option value="กองกลาง (งานพัสดุและโสตฯ)">กองกลาง (งานพัสดุและโสตฯ)</option>
-        <option value="กองอาคารสถานที่">กองอาคารสถานที่</option>
-        <option value="ศูนย์บริหารจัดการทรัพย์สิน">ศูนย์บริหารจัดการทรัพย์สิน</option>
-        <option value="สำนักงานนวัตกรรมดิจิทัล (IT)">สำนักงานนวัตกรรมดิจิทัล (IT)</option>
-        <option value="กองจัดการความปลอดภัย (รปภ.)">กองจัดการความปลอดภัย (รปภ.)</option>
-        <option value="หน่วยงานขนส่ง (EV Shuttle)">หน่วยงานขนส่ง (EV Shuttle)</option>
-        <option value="อื่นๆ">อื่นๆ</option>`;
-
     const overlay = document.createElement("div");
     overlay.className = "popup-overlay";
     overlay.id = "popupOverlay";
@@ -119,10 +155,7 @@ function createPopup() {
         <div class="complaint-popup-body">
           <div class="popup-top-row">
             <div class="popup-section-label">รายละเอียดเคส</div>
-            <div class="popup-location">
-              <span class="popup-location-icon">📍</span>
-              <span id="popupLocation">-</span>
-            </div>
+            <div class="popup-location"><span class="popup-location-icon">📍</span><span id="popupLocation">-</span></div>
           </div>
           <div class="popup-divider"></div>
           <div class="popup-section">
@@ -151,13 +184,11 @@ function createPopup() {
           </div>
           <div class="popup-image-box">
             <img id="popupImage" class="popup-image" src="" alt="complaint image" />
-            <div class="popup-image-placeholder" id="popupImagePlaceholder">
-              <span class="popup-image-icon">🖼️</span>
-            </div>
+            <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupDepartmentSelect">มอบหมายหน่วยงาน</label>
-            <select id="popupDepartmentSelect" class="popup-select">${DEPT_OPTIONS}</select>
+            <select id="popupDepartmentSelect" class="popup-select">${deptOptionsHtml()}</select>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupNote">บันทึกเพิ่มเติม (ไม่บังคับ)</label>
@@ -172,33 +203,32 @@ function createPopup() {
     document.body.appendChild(overlay);
     document.body.appendChild(popup);
 
-    popupOverlay          = overlay;
-    complaintPopup        = popup;
-    popupCloseBtn         = document.getElementById("popupCloseBtn");
-    popupCancelBtn        = document.getElementById("popupCancelBtn");
-    popupSaveBtn          = document.getElementById("popupSaveBtn");
-    popupCaseId           = document.getElementById("popupCaseId");
-    popupLocation         = document.getElementById("popupLocation");
-    popupTitle            = document.getElementById("popupTitle");
-    popupDescription      = document.getElementById("popupDescription");
-    popupReporterName     = document.getElementById("popupReporterName");
-    popupReporterEmail    = document.getElementById("popupReporterEmail");
-    popupReporterId       = document.getElementById("popupReporterId");
-    popupReporterPhone    = document.getElementById("popupReporterPhone");
-    popupIncidentDate     = document.getElementById("popupIncidentDate");
-    popupIncidentTime     = document.getElementById("popupIncidentTime");
-    popupImage            = document.getElementById("popupImage");
+    popupOverlay = overlay;
+    complaintPopup = popup;
+    popupCloseBtn = document.getElementById("popupCloseBtn");
+    popupCancelBtn = document.getElementById("popupCancelBtn");
+    popupSaveBtn = document.getElementById("popupSaveBtn");
+    popupCaseId = document.getElementById("popupCaseId");
+    popupLocation = document.getElementById("popupLocation");
+    popupTitle = document.getElementById("popupTitle");
+    popupDescription = document.getElementById("popupDescription");
+    popupReporterName = document.getElementById("popupReporterName");
+    popupReporterEmail = document.getElementById("popupReporterEmail");
+    popupReporterId = document.getElementById("popupReporterId");
+    popupReporterPhone = document.getElementById("popupReporterPhone");
+    popupIncidentDate = document.getElementById("popupIncidentDate");
+    popupIncidentTime = document.getElementById("popupIncidentTime");
+    popupImage = document.getElementById("popupImage");
     popupImagePlaceholder = document.getElementById("popupImagePlaceholder");
     popupDepartmentSelect = document.getElementById("popupDepartmentSelect");
-    popupNote             = document.getElementById("popupNote");
+    popupNote = document.getElementById("popupNote");
 
     popupCloseBtn.addEventListener("click", closePopup);
     popupCancelBtn.addEventListener("click", closePopup);
     overlay.addEventListener("click", closePopup);
     popupSaveBtn.addEventListener("click", savePopupData);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePopup(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
 }
 
 createPopup();
-renderWaitingCases();
-renderDepartments();
+fetchForwardData();

@@ -1,3 +1,5 @@
+// Shared admin utilities: status mapping, category colours, DB-to-UI translator.
+
 const CATEGORY_COLORS = {
     "สถานที่": "#ff9800",
     "บุคลากร": "#e056f1",
@@ -5,7 +7,8 @@ const CATEGORY_COLORS = {
     "ระบบ IT": "#a4b800",
     "อุปกรณ์อิเล็กทรอนิกส์": "#c438e8",
     "ร้านค้า": "#18c4c7",
-    "อื่นๆ": "#ff0b67"
+    "อื่นๆ": "#ff0b67",
+    "แจ้งเหตุ": "#ff0b67"
 };
 
 const CATEGORY_CLASS_MAP = {
@@ -17,28 +20,22 @@ const CATEGORY_CLASS_MAP = {
     "ร้านค้า": "tag-category6",
     "อื่นๆ": "tag-category7"
 };
+
 function formatTimestamp(ts) {
     try {
-        const pastDate = new Date(ts);
-        const nowDate = new Date();
-        const diffInSeconds = Math.floor((nowDate - pastDate) / 1000);
-        
-        if (diffInSeconds <= 0 || diffInSeconds < 60) return "เมื่อสักครู่";
-        
-        const diffInMinutes = Math.floor(diffInSeconds / 60);
-        if (diffInMinutes < 60) return `${diffInMinutes} นาที`;
-        
-        const diffInHours = Math.floor(diffInMinutes / 60);
-        if (diffInHours < 24) return `${diffInHours} ชม.`;
-        
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 30) return `${diffInDays} วัน`;
-        
-        const diffInMonths = Math.floor(diffInDays / 30);
-        if (diffInMonths < 12) return `${diffInMonths} เดือน`;
-        
-        const diffInYears = Math.floor(diffInDays / 365);
-        return `${diffInYears} ปี`;
+        const past = new Date(ts);
+        const diffSec = Math.floor((Date.now() - past.getTime()) / 1000);
+        if (isNaN(diffSec)) return "-";
+        if (diffSec < 60) return "เมื่อสักครู่";
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin} นาที`;
+        const diffHr = Math.floor(diffMin / 60);
+        if (diffHr < 24) return `${diffHr} ชม.`;
+        const diffDay = Math.floor(diffHr / 24);
+        if (diffDay < 30) return `${diffDay} วัน`;
+        const diffMon = Math.floor(diffDay / 30);
+        if (diffMon < 12) return `${diffMon} เดือน`;
+        return `${Math.floor(diffDay / 365)} ปี`;
     } catch { return ts; }
 }
 
@@ -57,24 +54,16 @@ function getStatusLabel(status) {
     return status;
 }
 
-function updateSidebarCounts() {
-    const stats = MOCK_DASHBOARD_DATA.stats;
-    const incidentBadge  = document.getElementById('sidebarIncidentCount')
-                        || document.querySelector('a[href$="incidentAdmin.html"] .count-badge');
-    const complaintBadge = document.getElementById('sidebarComplaintCount')
-                        || document.querySelector('a[href$="complaintsAdmin.html"] .count-badge');
-    if (incidentBadge)  incidentBadge.textContent  = stats.incident_count;
-    if (complaintBadge) complaintBadge.textContent = stats.complaint_count;
+function caseId(item) {
+    return item.complaint_id || item.incident_id || "-";
 }
 
-document.addEventListener('DOMContentLoaded', updateSidebarCounts);
-
 function mapDbToUI(item) {
+    const id = caseId(item);
+    const isComp = window.AppAPI ? window.AppAPI.isComplaint(item) : (item.type === "complaint");
     return {
-        // เช็คว่ามี ID ตัวไหน ให้ใช้ตัวนั้น
-        id: item.incident_id || item.complaint_id || "-",
-        // แยกประเภทให้รู้ว่าเป็น "ร้องเรียน" หรือ "แจ้งเหตุ"
-        type: item.incident_id ? "incident" : "complaint", 
+        id,
+        type: isComp ? "complaint" : "incident",
         title: item.subject || "ไม่มีหัวข้อ",
         fullTitle: item.subject || "ไม่มีหัวข้อ",
         category: item.category || "อื่นๆ",
@@ -82,7 +71,7 @@ function mapDbToUI(item) {
         time: item.timestamp ? formatTimestamp(item.timestamp) : "-",
         location: item.location || "-",
         description: item.details || "-",
-        reporterName: `${item.firstname || ''} ${item.lastname || ''}`.trim() || "-",
+        reporterName: item.fullname || `${item.firstname || ""} ${item.lastname || ""}`.trim() || "-",
         reporterEmail: item.email || "-",
         reporterId: item.id_card || "-",
         reporterPhone: item.phone || "-",
@@ -92,6 +81,26 @@ function mapDbToUI(item) {
         department: item.department || "",
         note: item.note || "",
         timestamp: item.timestamp || "",
-        eventTimestamp: item.event_time || item.timestamp || ""
+        eventTimestamp: item.event_time || item.timestamp || "",
+        raw: item
     };
 }
+
+async function refreshSidebarCounts() {
+    if (!window.AppAPI) return;
+    try {
+        const items = await window.AppAPI.loadCases();
+        const incidentCount = items.filter(i => window.AppAPI.isIncident(i)).length;
+        const complaintCount = items.filter(i => window.AppAPI.isComplaint(i)).length;
+        const incidentBadge = document.getElementById('sidebarIncidentCount')
+            || document.querySelector('a[href$="incidentAdmin.html"] .count-badge');
+        const complaintBadge = document.getElementById('sidebarComplaintCount')
+            || document.querySelector('a[href$="complaintsAdmin.html"] .count-badge');
+        if (incidentBadge) incidentBadge.textContent = incidentCount;
+        if (complaintBadge) complaintBadge.textContent = complaintCount;
+    } catch (err) {
+        console.error("Sidebar count refresh failed:", err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', refreshSidebarCounts);

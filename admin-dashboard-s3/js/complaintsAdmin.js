@@ -1,9 +1,11 @@
-const API_URL = ""; // ใส่ API endpoint จริงที่นี่
-
+// Admin – หน้าร้องเรียน (live data table).
 let complaints = [];
+let currentStatusFilter = "ทั้งหมด";
+let currentCategoryFilter = "ทั้งหมด";
+let currentSelectedComplaint = null;
 
-const tableBody      = document.getElementById("complaintTableBody");
-const filterButtons  = document.querySelectorAll(".filter-btn");
+const tableBody = document.getElementById("complaintTableBody");
+const filterButtons = document.querySelectorAll(".filter-btn");
 const categoryFilter = document.getElementById("categoryFilter");
 
 let popupOverlay, complaintPopup, popupCloseBtn, popupCancelBtn, popupSaveBtn;
@@ -12,41 +14,26 @@ let popupReporterName, popupReporterEmail, popupReporterId, popupReporterPhone;
 let popupIncidentDate, popupIncidentTime, popupImage, popupImagePlaceholder;
 let popupDepartmentSelect, popupNote;
 
-let currentStatusFilter      = "ทั้งหมด";
-let currentCategoryFilter    = "ทั้งหมด";
-let currentSelectedComplaint = null;
-
 async function fetchComplaintsData() {
     try {
-        let rawData;
-        if (API_URL) {
-            const response = await fetch(API_URL);
-            rawData = await response.json();
-        } else {
-            rawData = MOCK_COMPLAINTS_API;
-        }
-        complaints = rawData.filter(item => item.complaint_id).map(item => mapDbToUI(item));
+        const rawData = await window.AppAPI.loadCases();
+        complaints = rawData.filter(item => window.AppAPI.isComplaint(item)).map(mapDbToUI);
         updateView();
     } catch (error) {
         console.error("Error fetching complaints:", error);
-        complaints = MOCK_COMPLAINTS_API.map(item => mapDbToUI(item));
-        updateView();
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#c00;padding:24px;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</td></tr>`;
     }
 }
 
 function filterComplaints() {
-    return complaints.filter((item) => {
+    return complaints.filter(item => {
         const s = (item.status || "").toLowerCase();
-        let normalizedStatus = item.status;
-        if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") {
-            normalizedStatus = "ใหม่";
-        } else if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") {
-            normalizedStatus = "กำลังดำเนิน";
-        } else if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed") {
-            normalizedStatus = "เสร็จสิ้น";
-        }
-        const matchStatus   = currentStatusFilter   === "ทั้งหมด" || normalizedStatus === currentStatusFilter;
-        const matchCategory = currentCategoryFilter === "ทั้งหมด" || item.category    === currentCategoryFilter;
+        let normalized = item.status;
+        if (s === "ใหม่" || s === "pending" || s === "รอดำเนินการ") normalized = "ใหม่";
+        else if (s === "กำลังดำเนิน" || s === "in_progress" || s === "กำลังดำเนินการ") normalized = "กำลังดำเนิน";
+        else if (s === "เสร็จสิ้น" || s === "resolved" || s === "completed") normalized = "เสร็จสิ้น";
+        const matchStatus = currentStatusFilter === "ทั้งหมด" || normalized === currentStatusFilter;
+        const matchCategory = currentCategoryFilter === "ทั้งหมด" || item.category === currentCategoryFilter;
         return matchStatus && matchCategory;
     }).sort((a, b) => {
         const toMs = ts => { if (!ts) return 0; const t = new Date(ts).getTime(); return isNaN(t) ? 0 : t; };
@@ -55,46 +42,46 @@ function filterComplaints() {
 }
 
 function renderComplaints(data) {
-    tableBody.innerHTML = data.map((item) => `
+    if (!tableBody) return;
+    if (!data.length) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;">ไม่พบรายการ</td></tr>`;
+        return;
+    }
+    tableBody.innerHTML = data.map(item => `
         <tr class="complaint-row" data-id="${item.id}">
           <td>${item.id}</td>
           <td><span class="title-text">${item.title}</span></td>
           <td>${item.category}</td>
-          <td>
-            <span class="status-pill ${getStatusClass(item.status)}">
-              ${getStatusLabel(item.status)}
-            </span>
-          </td>
+          <td><span class="status-pill ${getStatusClass(item.status)}">${getStatusLabel(item.status)}</span></td>
           <td><span class="time-text">${item.time}</span></td>
-        </tr>
-    `).join("");
+        </tr>`).join("");
     addRowClickEvents();
 }
 
 function addRowClickEvents() {
-    document.querySelectorAll(".complaint-row").forEach((row) => {
+    document.querySelectorAll(".complaint-row").forEach(row => {
         row.addEventListener("click", () => {
-            const selected = complaints.find((item) => item.id === row.dataset.id);
+            const selected = complaints.find(item => item.id === row.dataset.id);
             if (selected) openPopup(selected);
         });
     });
 }
 
 function openPopup(item) {
-    currentSelectedComplaint      = item;
-    popupCaseId.textContent       = item.id;
-    popupLocation.textContent     = item.location      || "-";
-    popupTitle.textContent        = item.fullTitle     || item.title;
-    popupDescription.textContent  = item.description   || "-";
-    popupReporterName.textContent = item.reporterName  || "-";
-    popupReporterEmail.textContent= item.reporterEmail || "-";
-    popupReporterId.textContent   = item.reporterId    || "-";
-    popupReporterPhone.textContent= item.reporterPhone || "-";
-    popupIncidentDate.textContent = item.incidentDate  || "-";
-    popupIncidentTime.textContent = item.incidentTime  || "-";
-    popupDepartmentSelect.value   = item.department    || "";
-    popupNote.value               = item.note          || "";
-    if (item.image && item.image.trim() !== "") {
+    currentSelectedComplaint = item;
+    popupCaseId.textContent = item.id;
+    popupLocation.textContent = item.location || "-";
+    popupTitle.textContent = item.fullTitle || item.title;
+    popupDescription.textContent = item.description || "-";
+    popupReporterName.textContent = item.reporterName || "-";
+    popupReporterEmail.textContent = item.reporterEmail || "-";
+    popupReporterId.textContent = item.reporterId || "-";
+    popupReporterPhone.textContent = item.reporterPhone || "-";
+    popupIncidentDate.textContent = item.incidentDate || "-";
+    popupIncidentTime.textContent = item.incidentTime || "-";
+    popupDepartmentSelect.value = item.department || "";
+    popupNote.value = item.note || "";
+    if (item.image && item.image.trim()) {
         popupImage.src = item.image;
         popupImage.style.display = "block";
         popupImagePlaceholder.style.display = "none";
@@ -116,45 +103,51 @@ function closePopup() {
     document.body.style.overflow = "";
 }
 
-function savePopupData() {
+async function savePopupData() {
     if (!currentSelectedComplaint) return;
-    currentSelectedComplaint.department = popupDepartmentSelect.value;
-    currentSelectedComplaint.note       = popupNote.value;
-    alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
-    closePopup();
+    const payload = {
+        complaint_id: currentSelectedComplaint.id,
+        department: popupDepartmentSelect.value || "",
+        note: popupNote.value || ""
+    };
+    popupSaveBtn.disabled = true;
+    try {
+        await window.AppAPI.updateCase(payload);
+        currentSelectedComplaint.department = payload.department;
+        currentSelectedComplaint.note = payload.note;
+        alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+        closePopup();
+    } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+    } finally {
+        popupSaveBtn.disabled = false;
+    }
 }
 
-function updateView() {
-    renderComplaints(filterComplaints());
-}
+function updateView() { renderComplaints(filterComplaints()); }
 
-filterButtons.forEach((button) => {
+filterButtons.forEach(button => {
     button.addEventListener("click", () => {
         currentStatusFilter = button.dataset.filter;
-        filterButtons.forEach((btn) => btn.classList.remove("active-filter"));
+        filterButtons.forEach(btn => btn.classList.remove("active-filter"));
         button.classList.add("active-filter");
         updateView();
     });
 });
 
-categoryFilter.addEventListener("change", (event) => {
-    currentCategoryFilter = event.target.value;
-    updateView();
-});
+if (categoryFilter) {
+    categoryFilter.addEventListener("change", e => {
+        currentCategoryFilter = e.target.value;
+        updateView();
+    });
+}
+
+function deptOptionsHtml() {
+    return `<option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>`
+        + (window.DEPARTMENT_OPTIONS || []).map(d => `<option value="${d}">${d}</option>`).join("");
+}
 
 function createPopup() {
-    const DEPT_OPTIONS = `
-        <option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>
-        <option value="กองบริการการศึกษา">กองบริการการศึกษา</option>
-        <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
-        <option value="กองกลาง (งานพัสดุและโสตฯ)">กองกลาง (งานพัสดุและโสตฯ)</option>
-        <option value="กองอาคารสถานที่">กองอาคารสถานที่</option>
-        <option value="ศูนย์บริหารจัดการทรัพย์สิน">ศูนย์บริหารจัดการทรัพย์สิน</option>
-        <option value="สำนักงานนวัตกรรมดิจิทัล (IT)">สำนักงานนวัตกรรมดิจิทัล (IT)</option>
-        <option value="กองจัดการความปลอดภัย (รปภ.)">กองจัดการความปลอดภัย (รปภ.)</option>
-        <option value="หน่วยงานขนส่ง (EV Shuttle)">หน่วยงานขนส่ง (EV Shuttle)</option>
-        <option value="อื่นๆ">อื่นๆ</option>`;
-
     const overlay = document.createElement("div");
     overlay.className = "popup-overlay";
     overlay.id = "popupOverlay";
@@ -203,13 +196,11 @@ function createPopup() {
           </div>
           <div class="popup-image-box">
             <img id="popupImage" class="popup-image" src="" alt="complaint image" />
-            <div class="popup-image-placeholder" id="popupImagePlaceholder">
-              <span class="popup-image-icon">🖼️</span>
-            </div>
+            <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupDepartmentSelect">มอบหมายหน่วยงาน</label>
-            <select id="popupDepartmentSelect" class="popup-select">${DEPT_OPTIONS}</select>
+            <select id="popupDepartmentSelect" class="popup-select">${deptOptionsHtml()}</select>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupNote">บันทึกเพิ่มเติม (ไม่บังคับ)</label>
@@ -224,31 +215,31 @@ function createPopup() {
     document.body.appendChild(overlay);
     document.body.appendChild(popup);
 
-    popupOverlay          = overlay;
-    complaintPopup        = popup;
-    popupCloseBtn         = document.getElementById("popupCloseBtn");
-    popupCancelBtn        = document.getElementById("popupCancelBtn");
-    popupSaveBtn          = document.getElementById("popupSaveBtn");
-    popupCaseId           = document.getElementById("popupCaseId");
-    popupLocation         = document.getElementById("popupLocation");
-    popupTitle            = document.getElementById("popupTitle");
-    popupDescription      = document.getElementById("popupDescription");
-    popupReporterName     = document.getElementById("popupReporterName");
-    popupReporterEmail    = document.getElementById("popupReporterEmail");
-    popupReporterId       = document.getElementById("popupReporterId");
-    popupReporterPhone    = document.getElementById("popupReporterPhone");
-    popupIncidentDate     = document.getElementById("popupIncidentDate");
-    popupIncidentTime     = document.getElementById("popupIncidentTime");
-    popupImage            = document.getElementById("popupImage");
+    popupOverlay = overlay;
+    complaintPopup = popup;
+    popupCloseBtn = document.getElementById("popupCloseBtn");
+    popupCancelBtn = document.getElementById("popupCancelBtn");
+    popupSaveBtn = document.getElementById("popupSaveBtn");
+    popupCaseId = document.getElementById("popupCaseId");
+    popupLocation = document.getElementById("popupLocation");
+    popupTitle = document.getElementById("popupTitle");
+    popupDescription = document.getElementById("popupDescription");
+    popupReporterName = document.getElementById("popupReporterName");
+    popupReporterEmail = document.getElementById("popupReporterEmail");
+    popupReporterId = document.getElementById("popupReporterId");
+    popupReporterPhone = document.getElementById("popupReporterPhone");
+    popupIncidentDate = document.getElementById("popupIncidentDate");
+    popupIncidentTime = document.getElementById("popupIncidentTime");
+    popupImage = document.getElementById("popupImage");
     popupImagePlaceholder = document.getElementById("popupImagePlaceholder");
     popupDepartmentSelect = document.getElementById("popupDepartmentSelect");
-    popupNote             = document.getElementById("popupNote");
+    popupNote = document.getElementById("popupNote");
 
     popupCloseBtn.addEventListener("click", closePopup);
     popupCancelBtn.addEventListener("click", closePopup);
     overlay.addEventListener("click", closePopup);
     popupSaveBtn.addEventListener("click", savePopupData);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePopup(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
 }
 
 createPopup();

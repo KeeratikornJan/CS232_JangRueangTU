@@ -1,7 +1,9 @@
-const API_URL = ""; // ใส่ API endpoint จริงที่นี่
-
+// Admin – หน้าแจ้งเหตุ (live data card grid).
 const incidentGrid = document.getElementById("incidentGrid");
-const sortSelect   = document.getElementById("sortSelect");
+const sortSelect = document.getElementById("sortSelect");
+
+let incidents = [];
+let currentSelectedIncident = null;
 
 let popupOverlay, incidentPopup, popupCloseBtn, popupCancelBtn, popupSaveBtn;
 let popupCaseId, popupLocation, popupTitle, popupDescription;
@@ -9,73 +11,58 @@ let popupReporterName, popupReporterEmail, popupReporterId, popupReporterPhone;
 let popupIncidentDate, popupIncidentTime, popupImage, popupImagePlaceholder;
 let popupDepartmentSelect, popupNote;
 
-let incidents = [];
-let currentSelectedIncident = null;
-
 async function fetchIncidentsData() {
     try {
-        let rawData;
-        if (API_URL) {
-            const response = await fetch(API_URL);
-            rawData = await response.json();
-        } else {
-            rawData = MOCK_INCIDENTS_API;
-        }
-        incidents = rawData.filter(item => item.incident_id).map(item => mapDbToUI(item));
+        const rawData = await window.AppAPI.loadCases();
+        incidents = rawData.filter(item => window.AppAPI.isIncident(item)).map(mapDbToUI);
         sortIncidents();
     } catch (error) {
         console.error("Error fetching incidents:", error);
-        incidents = MOCK_INCIDENTS_API.map(item => mapDbToUI(item));
-        sortIncidents();
+        if (incidentGrid) incidentGrid.innerHTML = `<p style="text-align:center;color:#c00;padding:24px;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
     }
 }
 
 function renderIncidents(data) {
+    if (!incidentGrid) return;
+    if (!data.length) {
+        incidentGrid.innerHTML = `<p style="text-align:center;padding:24px;">ยังไม่มีรายการแจ้งเหตุ</p>`;
+        return;
+    }
     incidentGrid.innerHTML = data.map(item => `
         <article class="incident-card" data-id="${item.id}" style="cursor:pointer;">
-          <div class="incident-card-header">
-            ${item.id} : ${item.title}
-          </div>
+          <div class="incident-card-header">${item.id} : ${item.title}</div>
           <div class="incident-card-body">
-            <div class="location-line">
-              <span class="location-pin">📍</span>${item.location}
-            </div>
+            <div class="location-line"><span class="location-pin">📍</span>${item.location}</div>
             <div class="incident-desc">${item.description}</div>
-
             <div class="info-title">ข้อมูลผู้แจ้งเหตุ</div>
             <div class="info-line"><span class="info-label">ชื่อ-สกุล :</span> ${item.reporterName}</div>
             <div class="info-line"><span class="info-label">หมายเลขบัตรประชาชน :</span> ${item.reporterId}</div>
             <div class="info-line"><span class="info-label">เบอร์มือถือ :</span> ${item.reporterPhone}</div>
-
             <hr class="card-divider">
-
             <div class="info-title">ข้อมูลแจ้งเหตุ</div>
             <div class="info-line"><span class="info-label">วันที่เกิดเหตุ :</span> ${item.incidentDate}</div>
             <div class="info-line"><span class="info-label">เวลาที่เกิดเหตุ :</span> ${item.incidentTime}</div>
-
             <div class="image-box">
-              <div class="image-icon">🖼️</div>
+              ${item.image ? `<img src="${item.image}" alt="image" style="max-width:100%;border-radius:6px;" />` : `<div class="image-icon">🖼️</div>`}
             </div>
-
             <div class="card-action">
               <button class="receive-btn" type="button" data-id="${item.id}">รับเรื่อง</button>
             </div>
           </div>
-        </article>
-    `).join("");
+        </article>`).join("");
     attachCardEvents();
 }
 
 function attachCardEvents() {
     document.querySelectorAll(".incident-card").forEach(card => {
-        card.addEventListener("click", (e) => {
+        card.addEventListener("click", e => {
             if (e.target.closest(".receive-btn")) return;
             const item = incidents.find(i => i.id === card.dataset.id);
             if (item) openPopup(item);
         });
     });
     document.querySelectorAll(".receive-btn").forEach(btn => {
-        btn.addEventListener("click", (e) => {
+        btn.addEventListener("click", e => {
             e.stopPropagation();
             const item = incidents.find(i => i.id === btn.dataset.id);
             if (item) openPopup(item);
@@ -84,20 +71,20 @@ function attachCardEvents() {
 }
 
 function openPopup(item) {
-    currentSelectedIncident        = item;
-    popupCaseId.textContent        = item.id;
-    popupLocation.textContent      = item.location      || "-";
-    popupTitle.textContent         = item.title         || "-";
-    popupDescription.textContent   = item.description   || "-";
-    popupReporterName.textContent  = item.reporterName  || "-";
+    currentSelectedIncident = item;
+    popupCaseId.textContent = item.id;
+    popupLocation.textContent = item.location || "-";
+    popupTitle.textContent = item.title || "-";
+    popupDescription.textContent = item.description || "-";
+    popupReporterName.textContent = item.reporterName || "-";
     popupReporterEmail.textContent = item.reporterEmail || "-";
-    popupReporterId.textContent    = item.reporterId    || "-";
+    popupReporterId.textContent = item.reporterId || "-";
     popupReporterPhone.textContent = item.reporterPhone || "-";
-    popupIncidentDate.textContent  = item.incidentDate  || "-";
-    popupIncidentTime.textContent  = item.incidentTime  || "-";
-    popupDepartmentSelect.value    = item.department    || "";
-    popupNote.value                = item.note          || "";
-    if (item.image && item.image.trim() !== "") {
+    popupIncidentDate.textContent = item.incidentDate || "-";
+    popupIncidentTime.textContent = item.incidentTime || "-";
+    popupDepartmentSelect.value = item.department || "";
+    popupNote.value = item.note || "";
+    if (item.image && item.image.trim()) {
         popupImage.src = item.image;
         popupImage.style.display = "block";
         popupImagePlaceholder.style.display = "none";
@@ -119,12 +106,27 @@ function closePopup() {
     document.body.style.overflow = "";
 }
 
-function savePopupData() {
+async function savePopupData() {
     if (!currentSelectedIncident) return;
-    currentSelectedIncident.department = popupDepartmentSelect.value;
-    currentSelectedIncident.note       = popupNote.value;
-    alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
-    closePopup();
+    const payload = {
+        complaint_id: currentSelectedIncident.id,
+        department: popupDepartmentSelect.value || "",
+        note: popupNote.value || "",
+        status: "in_progress"
+    };
+    popupSaveBtn.disabled = true;
+    try {
+        await window.AppAPI.updateCase(payload);
+        currentSelectedIncident.department = payload.department;
+        currentSelectedIncident.note = payload.note;
+        currentSelectedIncident.status = payload.status;
+        alert("บันทึกการเปลี่ยนแปลงเรียบร้อย");
+        closePopup();
+    } catch (err) {
+        alert("บันทึกไม่สำเร็จ: " + err.message);
+    } finally {
+        popupSaveBtn.disabled = false;
+    }
 }
 
 function toMs(ts) {
@@ -134,7 +136,7 @@ function toMs(ts) {
 }
 
 function sortIncidents() {
-    const oldest = sortSelect.value === "oldest";
+    const oldest = sortSelect && sortSelect.value === "oldest";
     const sorted = [...incidents].sort((a, b) => {
         const tA = toMs(a.eventTimestamp || a.timestamp);
         const tB = toMs(b.eventTimestamp || b.timestamp);
@@ -143,21 +145,14 @@ function sortIncidents() {
     renderIncidents(sorted);
 }
 
-sortSelect.addEventListener("change", sortIncidents);
+if (sortSelect) sortSelect.addEventListener("change", sortIncidents);
+
+function deptOptionsHtml() {
+    return `<option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>`
+        + (window.DEPARTMENT_OPTIONS || []).map(d => `<option value="${d}">${d}</option>`).join("");
+}
 
 function createPopup() {
-    const DEPT_OPTIONS = `
-        <option value="" disabled selected hidden>กรุณาเลือกหน่วยงาน</option>
-        <option value="กองบริการการศึกษา">กองบริการการศึกษา</option>
-        <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
-        <option value="กองกลาง (งานพัสดุและโสตฯ)">กองกลาง (งานพัสดุและโสตฯ)</option>
-        <option value="กองอาคารสถานที่">กองอาคารสถานที่</option>
-        <option value="ศูนย์บริหารจัดการทรัพย์สิน">ศูนย์บริหารจัดการทรัพย์สิน</option>
-        <option value="สำนักงานนวัตกรรมดิจิทัล (IT)">สำนักงานนวัตกรรมดิจิทัล (IT)</option>
-        <option value="กองจัดการความปลอดภัย (รปภ.)">กองจัดการความปลอดภัย (รปภ.)</option>
-        <option value="หน่วยงานขนส่ง (EV Shuttle)">หน่วยงานขนส่ง (EV Shuttle)</option>
-        <option value="อื่นๆ">อื่นๆ</option>`;
-
     const overlay = document.createElement("div");
     overlay.className = "popup-overlay";
     overlay.id = "popupOverlay";
@@ -174,10 +169,7 @@ function createPopup() {
         <div class="complaint-popup-body">
           <div class="popup-top-row">
             <div class="popup-section-label">รายละเอียดเคส</div>
-            <div class="popup-location">
-              <span class="popup-location-icon">📍</span>
-              <span id="popupLocation">-</span>
-            </div>
+            <div class="popup-location"><span class="popup-location-icon">📍</span><span id="popupLocation">-</span></div>
           </div>
           <div class="popup-divider"></div>
           <div class="popup-section">
@@ -206,13 +198,11 @@ function createPopup() {
           </div>
           <div class="popup-image-box">
             <img id="popupImage" class="popup-image" src="" alt="incident image" />
-            <div class="popup-image-placeholder" id="popupImagePlaceholder">
-              <span class="popup-image-icon">🖼️</span>
-            </div>
+            <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupDepartmentSelect">มอบหมายหน่วยงาน</label>
-            <select id="popupDepartmentSelect" class="popup-select">${DEPT_OPTIONS}</select>
+            <select id="popupDepartmentSelect" class="popup-select">${deptOptionsHtml()}</select>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupNote">บันทึกเพิ่มเติม (ไม่บังคับ)</label>
@@ -227,31 +217,31 @@ function createPopup() {
     document.body.appendChild(overlay);
     document.body.appendChild(popup);
 
-    popupOverlay          = overlay;
-    incidentPopup         = popup;
-    popupCloseBtn         = document.getElementById("popupCloseBtn");
-    popupCancelBtn        = document.getElementById("popupCancelBtn");
-    popupSaveBtn          = document.getElementById("popupSaveBtn");
-    popupCaseId           = document.getElementById("popupCaseId");
-    popupLocation         = document.getElementById("popupLocation");
-    popupTitle            = document.getElementById("popupTitle");
-    popupDescription      = document.getElementById("popupDescription");
-    popupReporterName     = document.getElementById("popupReporterName");
-    popupReporterEmail    = document.getElementById("popupReporterEmail");
-    popupReporterId       = document.getElementById("popupReporterId");
-    popupReporterPhone    = document.getElementById("popupReporterPhone");
-    popupIncidentDate     = document.getElementById("popupIncidentDate");
-    popupIncidentTime     = document.getElementById("popupIncidentTime");
-    popupImage            = document.getElementById("popupImage");
+    popupOverlay = overlay;
+    incidentPopup = popup;
+    popupCloseBtn = document.getElementById("popupCloseBtn");
+    popupCancelBtn = document.getElementById("popupCancelBtn");
+    popupSaveBtn = document.getElementById("popupSaveBtn");
+    popupCaseId = document.getElementById("popupCaseId");
+    popupLocation = document.getElementById("popupLocation");
+    popupTitle = document.getElementById("popupTitle");
+    popupDescription = document.getElementById("popupDescription");
+    popupReporterName = document.getElementById("popupReporterName");
+    popupReporterEmail = document.getElementById("popupReporterEmail");
+    popupReporterId = document.getElementById("popupReporterId");
+    popupReporterPhone = document.getElementById("popupReporterPhone");
+    popupIncidentDate = document.getElementById("popupIncidentDate");
+    popupIncidentTime = document.getElementById("popupIncidentTime");
+    popupImage = document.getElementById("popupImage");
     popupImagePlaceholder = document.getElementById("popupImagePlaceholder");
     popupDepartmentSelect = document.getElementById("popupDepartmentSelect");
-    popupNote             = document.getElementById("popupNote");
+    popupNote = document.getElementById("popupNote");
 
     popupCloseBtn.addEventListener("click", closePopup);
     popupCancelBtn.addEventListener("click", closePopup);
     overlay.addEventListener("click", closePopup);
     popupSaveBtn.addEventListener("click", savePopupData);
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePopup(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
 }
 
 createPopup();
