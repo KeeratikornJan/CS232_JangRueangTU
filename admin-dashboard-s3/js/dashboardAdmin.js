@@ -227,7 +227,7 @@ function createCaseDetailPopup() {
             </div>
           </div>
           <div class="popup-image-box">
-            <img id="caseDetailImage" class="popup-image" src="" alt="case image" />
+            <img id="caseDetailImage" class="popup-image" src="" alt="case image" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <div class="popup-image-placeholder" id="caseDetailImgPlaceholder">🖼️</div>
           </div>
         </div>`;
@@ -258,11 +258,11 @@ function viewDetail(id) {
     const ph = document.getElementById('caseDetailImgPlaceholder');
     const url = item.image_url_presigned || item.image_url || '';
     if (url) {
-        img.src = url;
+        setCaseImage(img, url);
         img.style.display = 'block';
         ph.style.display = 'none';
     } else {
-        img.src = '';
+        setCaseImage(img, '');
         img.style.display = 'none';
         ph.style.display = 'flex';
     }

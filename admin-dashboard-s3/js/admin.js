@@ -86,21 +86,71 @@ function mapDbToUI(item) {
     };
 }
 
+function _sidebarBadges(kind) {
+    const idEl = document.getElementById(
+        kind === "incident" ? "sidebarIncidentCount" : "sidebarComplaintCount"
+    );
+    const linkSel = kind === "incident"
+        ? 'a[href$="incidentAdmin.html"] .count-badge'
+        : 'a[href$="complaintsAdmin.html"] .count-badge';
+    const set = new Set(document.querySelectorAll(linkSel));
+    if (idEl) set.add(idEl);
+    return [...set];
+}
+
+function _writeSidebarBadge(kind, value) {
+    _sidebarBadges(kind).forEach(el => { el.textContent = String(value); });
+}
+
 async function refreshSidebarCounts() {
+    // Always blank the static placeholders first so the stale "14" / "16" from
+    // the HTML never survives a failed or slow API call. Counter variables are
+    // declared fresh on every invocation — no module-level accumulators.
+    _writeSidebarBadge("incident", 0);
+    _writeSidebarBadge("complaint", 0);
+
     if (!window.AppAPI) return;
+
     try {
-        const items = await window.AppAPI.loadCases();
-        const incidentCount = items.filter(i => window.AppAPI.isIncident(i)).length;
-        const complaintCount = items.filter(i => window.AppAPI.isComplaint(i)).length;
-        const incidentBadge = document.getElementById('sidebarIncidentCount')
-            || document.querySelector('a[href$="incidentAdmin.html"] .count-badge');
-        const complaintBadge = document.getElementById('sidebarComplaintCount')
-            || document.querySelector('a[href$="complaintsAdmin.html"] .count-badge');
-        if (incidentBadge) incidentBadge.textContent = incidentCount;
-        if (complaintBadge) complaintBadge.textContent = complaintCount;
+        const items = (await window.AppAPI.loadCases()) || [];
+        let incidentCount = 0;
+        let complaintCount = 0;
+        for (const it of items) {
+            if (window.AppAPI.isIncident(it)) incidentCount += 1;
+            else if (window.AppAPI.isComplaint(it)) complaintCount += 1;
+        }
+        _writeSidebarBadge("incident", incidentCount);
+        _writeSidebarBadge("complaint", complaintCount);
     } catch (err) {
         console.error("Sidebar count refresh failed:", err);
+        _writeSidebarBadge("incident", 0);
+        _writeSidebarBadge("complaint", 0);
     }
 }
 
+// --- Cross-origin image helpers --------------------------------------------
+// CORB / opaque-response issues with the public S3 bucket are sidestepped by
+// (a) preferring the presigned URL the API now returns, and (b) attaching
+// crossorigin/referrerpolicy hints so the browser issues a CORS GET that the
+// bucket's CORS rule can answer.
+function pickCaseImageUrl(item) {
+    if (!item) return "";
+    return item.image_url_presigned || item.image_url || item.image || "";
+}
+
+function applyImageCorsAttrs(img) {
+    if (!img) return;
+    img.setAttribute("crossorigin", "anonymous");
+    img.setAttribute("referrerpolicy", "no-referrer");
+}
+
+function setCaseImage(img, url) {
+    if (!img) return;
+    applyImageCorsAttrs(img);
+    img.src = url || "";
+}
+
 document.addEventListener('DOMContentLoaded', refreshSidebarCounts);
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img.popup-image, img[data-case-image]').forEach(applyImageCorsAttrs);
+});

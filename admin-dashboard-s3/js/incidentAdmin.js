@@ -43,7 +43,7 @@ function renderIncidents(data) {
             <div class="info-line"><span class="info-label">วันที่เกิดเหตุ :</span> ${item.incidentDate}</div>
             <div class="info-line"><span class="info-label">เวลาที่เกิดเหตุ :</span> ${item.incidentTime}</div>
             <div class="image-box">
-              ${item.image ? `<img src="${item.image}" alt="image" style="max-width:100%;border-radius:6px;" />` : `<div class="image-icon">🖼️</div>`}
+              ${item.image ? `<img src="${item.image}" alt="image" crossorigin="anonymous" referrerpolicy="no-referrer" style="max-width:100%;border-radius:6px;" />` : `<div class="image-icon">🖼️</div>`}
             </div>
             <div class="card-action">
               <button class="receive-btn" type="button" data-id="${item.id}">รับเรื่อง</button>
@@ -85,11 +85,11 @@ function openPopup(item) {
     popupDepartmentSelect.value = item.department || "";
     popupNote.value = item.note || "";
     if (item.image && item.image.trim()) {
-        popupImage.src = item.image;
+        setCaseImage(popupImage, item.image);
         popupImage.style.display = "block";
         popupImagePlaceholder.style.display = "none";
     } else {
-        popupImage.src = "";
+        setCaseImage(popupImage, "");
         popupImage.style.display = "none";
         popupImagePlaceholder.style.display = "flex";
     }
@@ -197,7 +197,7 @@ function createPopup() {
             </div>
           </div>
           <div class="popup-image-box">
-            <img id="popupImage" class="popup-image" src="" alt="incident image" />
+            <img id="popupImage" class="popup-image" src="" alt="incident image" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
           </div>
           <div class="popup-form-card">

@@ -88,11 +88,11 @@ function openPopup(item) {
     popupDepartmentSelect.value = item.department || "";
     popupNote.value = item.note || "";
     if (item.image && item.image.trim()) {
-        popupImage.src = item.image;
+        setCaseImage(popupImage, item.image);
         popupImage.style.display = "block";
         popupImagePlaceholder.style.display = "none";
     } else {
-        popupImage.src = "";
+        setCaseImage(popupImage, "");
         popupImage.style.display = "none";
         popupImagePlaceholder.style.display = "flex";
     }
@@ -183,7 +183,7 @@ function createPopup() {
             </div>
           </div>
           <div class="popup-image-box">
-            <img id="popupImage" class="popup-image" src="" alt="complaint image" />
+            <img id="popupImage" class="popup-image" src="" alt="complaint image" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
           </div>
           <div class="popup-form-card">

@@ -24,14 +24,17 @@ from datetime import datetime, timezone
 
 import boto3
 from boto3.dynamodb.conditions import Attr
+from botocore.client import Config as BotoConfig
 
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 TABLE_NAME = os.environ.get("DDB_TABLE", "CS232ProjectData")
 S3_BUCKET = os.environ.get("S3_BUCKET", "cs232-complaint-images-10")
+PRESIGN_EXPIRES = int(os.environ.get("PRESIGN_EXPIRES", "3600"))
 
 dynamodb = boto3.resource("dynamodb", region_name=REGION)
 table = dynamodb.Table(TABLE_NAME)
-s3 = boto3.client("s3", region_name=REGION)
+# signature_version='s3v4' is required for presigned GETs in most regions.
+s3 = boto3.client("s3", region_name=REGION, config=BotoConfig(signature_version="s3v4"))
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
@@ -87,6 +90,8 @@ def _handle_get(event):
 
     if complaint_id:
         item = table.get_item(Key={"complaint_id": complaint_id}).get("Item")
+        if item:
+            _attach_presigned_url(item)
         return _respond(200, item or {})
 
     scan_kwargs = {}
@@ -102,6 +107,8 @@ def _handle_get(event):
         items.extend(response.get("Items", []))
 
     items.sort(key=lambda it: it.get("timestamp", ""), reverse=True)
+    for it in items:
+        _attach_presigned_url(it)
     return _respond(200, items)
 
 
@@ -194,8 +201,31 @@ def _upload_image(complaint_id, file_data, file_name, kind):
         Key=key,
         Body=binary,
         ContentType=MIME_BY_EXT.get(ext, "image/png"),
+        ContentDisposition="inline",
+        CacheControl="public, max-age=31536000",
     )
     return f"https://{S3_BUCKET}.s3.{REGION}.amazonaws.com/{key}"
+
+
+def _attach_presigned_url(item):
+    """Inject a short-lived presigned GET URL alongside the public S3 URL.
+
+    Browsers occasionally block direct S3 reads with CORB even when the bucket
+    policy is correct; a presigned URL is signed on the API side and the browser
+    treats it as a plain authenticated GET, sidestepping the issue.
+    """
+    public_url = item.get("image_url")
+    if not public_url or "amazonaws.com/" not in public_url:
+        return
+    try:
+        key = public_url.split("amazonaws.com/", 1)[1]
+        item["image_url_presigned"] = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": S3_BUCKET, "Key": key},
+            ExpiresIn=PRESIGN_EXPIRES,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[_attach_presigned_url] failed for {public_url}: {exc}")
 
 
 def _parse_body(event):
