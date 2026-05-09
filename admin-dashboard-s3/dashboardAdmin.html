@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - Admin</title>
-
+  <link rel="icon" type="image/x-icon" href="image/JangRueang.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap"
     rel="stylesheet"
   >
-
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="stylesheet" href="css/dashboardAdmin.css" />
   <link rel="stylesheet" href="css/layout-headerAdmin.css" />
 </head>
@@ -32,8 +32,11 @@
     </div>
 
     <div class="topbar-brand">
-      <div class="brand-main">JANGRUEANG <span class="brand-tu">TU</span></div>
-      <div class="brand-sub">ร้องเรียน แจ้งเหตุ ในมหาวิทยาลัยธรรมศาสตร์</div>
+        <a href="../public-user-s3/index.html">
+            <img class="Logo"
+            src="image/LOGO.png" 
+            alt="JangruengBlueLogo">
+        </a>
     </div>
   </header>
 
@@ -75,10 +78,6 @@
         <div class="chart-card">
           <div class="pie-area">
             <svg id="pieSvg" class="pie-svg" viewBox="0 0 520 340" aria-label="pie chart"></svg>
-
-            <div class="pie-label pie-label-place">สถานที่</div>
-            <div class="pie-label pie-label-person">บุคลากร</div>
-            <div class="pie-label pie-label-bus">รถโดยสาร</div>
           </div>
         </div>
 
@@ -92,8 +91,7 @@
 
       <section class="feed-card">
         <div class="feed-toolbar">
-          <button class="toolbar-btn" type="button">↔ <span>ตัวกรอง</span></button>
-          <button class="toolbar-btn" type="button">⇅ <span>ล่าสุด</span></button>
+          <button class="toolbar-btn" id="feedSortBtn" type="button">⇅ <span>ล่าสุด</span></button>
         </div>
 
         <div class="feed-list" id="feedList"></div>
@@ -101,145 +99,13 @@
     </main>
   </div>
 
-  <!-- overlay รวมเคสใกล้เคียง -->
+  <!-- overlay รวมเคสใกล้เคียง (JS renders inner content) -->
   <section id="similarCasesOverlay" class="similar-cases-overlay hidden">
-    <div class="similar-cases-panel">
-
-      <div class="similar-cases-header">
-        <h2 class="similar-cases-title">รวมเคสใกล้เคียง</h2>
-
-        <div class="similar-cases-summary">
-          <div class="summary-item summary-item-count">
-            <div class="summary-circle">5</div>
-            <div class="summary-text">จำนวนที่พบเคสอาจซ้ำซ้อน</div>
-          </div>
-
-          <div class="summary-item">
-            <div class="summary-text">หมวดหมู่ สถานที่</div>
-          </div>
-
-          <div class="summary-item">
-            <div class="summary-text">📍 ห้องสมุดกลาง ชั้น 2</div>
-          </div>
-
-          <div class="summary-item">
-            <div class="summary-text">เดือน มีนาคม ปี 2569</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="similar-case-card">
-        <div class="similar-case-top">
-          <div class="similar-case-left">
-            <div class="similar-case-id">GU-5868544001</div>
-            <div class="similar-case-main-title">
-              เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์
-            </div>
-
-            <div class="similar-case-tags">
-              <span class="similar-tag similar-tag-green">ร้องเรียน</span>
-              <span class="similar-tag similar-tag-pink"></span>
-            </div>
-          </div>
-
-          <div class="similar-case-right">
-            <div class="similar-case-time">4 นาที</div>
-
-            <button
-              type="button"
-              class="similar-action-btn arrow-btn"
-              id="toggleSimilarDetailBtn"
-              aria-label="เปิดหรือปิดรายละเอียด"
-            >
-              ˄
-            </button>
-
-            <div class="similar-case-number">1</div>
-
-            <button
-              type="button"
-              class="similar-action-btn close-btn"
-              id="closeSimilarCasesBtn"
-              aria-label="ปิดหน้ารวมเคสใกล้เคียง"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        <div id="similarCaseDetail" class="similar-case-detail">
-          <div class="similar-detail-left">
-            <div class="detail-group">
-              <div class="detail-label">หัวข้อ</div>
-              <div class="detail-value detail-value-bold">
-                เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์
-              </div>
-            </div>
-
-            <div class="detail-group">
-              <div class="detail-label">รายละเอียด</div>
-              <div class="detail-value">
-                พบเครื่องปรับอากาศบริเวณโซนที่นั่งอ่านหนังสือ ชั้น 2 ห้องสมุดกลาง
-                ส่งเสียงดังรบกวนสมาธิ และมีน้ำหยดลงบนโต๊ะอ่านหนังสือมา 3 วันแล้วครับ
-              </div>
-            </div>
-
-            <div class="detail-group">
-              <div class="detail-label">ผู้แจ้ง</div>
-              <div class="detail-value">
-                ชื่อ-สกุล : สมใจ แสนดี<br>
-                Email : somjai.s@email.com<br>
-                หมายเลขบัตรประชาชน : 1-4800-56181-34-5<br>
-                เบอร์มือถือ : 081-234-5678
-              </div>
-            </div>
-          </div>
-
-          <div class="similar-detail-right">
-            <div class="detail-group">
-              <div class="detail-label">ข้อมูลแจ้งเหตุ</div>
-              <div class="detail-value">
-                วันที่เกิดเหตุ : 25/04/2569<br>
-                เวลาที่เกิดเหตุ : 22:54:40
-              </div>
-            </div>
-
-            <div class="similar-image-box">
-              <span class="similar-image-icon">🖼️</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="similar-cases-footer">
-        <div class="similar-pagination">
-          <button type="button" class="pagination-arrow">≪</button>
-
-          <div class="pagination-dots">
-            <span class="pagination-dot active"></span>
-            <span class="pagination-dot"></span>
-            <span class="pagination-dot"></span>
-            <span class="pagination-dot"></span>
-            <span class="pagination-dot"></span>
-            <span class="pagination-dot"></span>
-            <span class="pagination-dot"></span>
-          </div>
-
-          <button type="button" class="pagination-arrow">≫</button>
-        </div>
-
-        <button
-          type="button"
-          class="similar-bottom-toggle"
-          id="bottomToggleSimilarBtn"
-          aria-label="ย่อหรือขยาย"
-        >
-          ˄
-        </button>
-      </div>
-    </div>
+    <div class="similar-cases-panel" id="similarCasesPanel"></div>
   </section>
 
+  <script src="js/mockData.js"></script>
+  <script src="js/admin.js"></script>
   <script src="js/dashboardAdmin.js"></script>
 </body>
 </html>

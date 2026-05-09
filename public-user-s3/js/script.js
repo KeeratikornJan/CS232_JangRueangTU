@@ -1,156 +1,131 @@
+// Public user – หน้าร้องเรียน (complaint form).
 document.addEventListener('DOMContentLoaded', () => {
-
-    // --- 1. จัดการปุ่มหมวดหมู่ (Category Tabs) ---
     const tabs = document.querySelectorAll('.tab');
     const categoryInput = document.getElementById('selected-category');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', function () {
-            // ลบคลาส active ออกจากทุกปุ่ม
             tabs.forEach(t => t.classList.remove('active'));
-
-            // เติมคลาส active ให้ปุ่มที่ถูกกด
             this.classList.add('active');
-
-            // เอาชื่อบนปุ่มไปใส่ใน Input ลับ
-            categoryInput.value = this.innerText;
-
-            console.log("หมวดหมู่: ", categoryInput.value);
+            categoryInput.value = this.innerText.trim();
         });
     });
 
-    //เช็คอีเมล//
-    function validateEmail(email) {
-        // สูตร Regex สำหรับเช็คโครงสร้างอีเมล
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }
-
-    // --- 2. ในส่วนการจัดการการส่งฟอร์ม ---
     const form = document.getElementById('complaintForm');
+    if (!form) return;
 
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            // 2. ดึงข้อมูลจากฟอร์ม
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
-            // 3. จัดการเรื่องไฟล์
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput ? fileInput.files[0] : null;
-
-            // --- การตรวจสอบข้อมูล (Validation) ---
-            if (!data.firstname) { alert("กรุณากรอกชื่อ"); return; }
-            if (!data.lastname) { alert("กรุณากรอกนามสกุล"); return; }
-            if (!data.email) { alert("กรุณากรอกอีเมล"); return; }
-            if (!data.phone) { alert("กรุณากรอกเบอร์มือถือ"); return; }
-            if (!validateEmail(data.email)) { alert("รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"); return; }
-            
-            const idPattern = /^[0-9]{13}$/;
-            if (!idPattern.test(data.id_card)) { alert("กรุณากรอกเลขบัตรประชาชนเป็นตัวเลข 13 หลัก"); return; }
-            if (!data.subject) { alert("กรุณาระบุหัวข้อร้องเรียน"); return; }
-            if (!data.event_time) { alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ"); return; }
-            if (!data.location) { alert("กรุณาระบุสถานที่เกิดเหตุ"); return; }
-            if (!data.details || data.details.trim() === "") { alert("กรุณากรอกรายละเอียดการร้องเรียน"); return; }
-
-            console.log("กำลังเตรียมส่งข้อมูล...");
-
-            // --- ส่วนปุ่มเพื่อป้องกันการกดซ้ำ ---
-            const submitBtn = document.querySelector('.btn-submit');
-            const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = "กำลังส่งข้อมูล...";
-            submitBtn.disabled = true;
-
-            // --- ฟังก์ชันหลักในการส่งข้อมูลไป AWS ---
-            const proceed = async (base64Image = null) => {
-                const finalData = {
-                    category: document.getElementById('selected-category').value,
-                    firstname: data.firstname,
-                    lastname: data.lastname,
-                    email: data.email,
-                    phone: data.phone,
-                    id_card: data.id_card,
-                    subject: data.subject,
-                    location: data.location,
-                    details: data.details,
-                    event_time: data.event_time,
-                    image: base64Image, // ใช้คำว่า image เพื่อให้ตรงกับโค้ด Lambda ก่อนหน้านี้
-                    fileName: file ? file.name : ""
-                };
-
-                // ⚠️ แก้ไข URL ตรงนี้ หากคุณมีการตั้งค่า Route ใน API Gateway (เช่น ต่อท้ายด้วย /submit)
-                const apiUrl = "https://ulrx8z669l.execute-api.us-east-1.amazonaws.com/prod/submit"; 
-
-                try {
-                    // เรียกใช้งาน API Gateway
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(finalData)
-                    });
-
-                    if (response.ok) {
-                        const responseData = await response.json();
-                        console.log("ส่งข้อมูลสำเร็จ:", responseData);
-
-                        // บันทึกเข้า Session ไว้เผื่อหน้า confirm อยากใช้โชว์ข้อมูล
-                        sessionStorage.setItem('userComplaintData', JSON.stringify(finalData));
-
-                        // เปลี่ยนหน้าไปแบบสะอาดๆ
-                        window.location.href = "views/confirm.html";
-                    } else {
-                        throw new Error(`Server responded with status: ${response.status}`);
-                    }
-
-                } catch (error) {
-                    console.error("เกิดข้อผิดพลาด:", error);
-                    alert("ไม่สามารถส่งข้อมูลได้ กรุณาลองใหม่อีกครั้ง (ตรวจสอบว่าเปิด CORS ใน API Gateway หรือยัง)");
-                    
-                    // คืนค่าปุ่มให้กลับมากดใหม่ได้ถ้า Error
-                    submitBtn.innerText = originalBtnText;
-                    submitBtn.disabled = false;
-                }
-            };
-
-            // --- ส่วนสั่งการให้อ่านไฟล์ ---
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => proceed(event.target.result); // แปลงเป็น Base64 แล้วส่ง
-                reader.readAsDataURL(file);
-            } else {
-                proceed(); // ถ้าไม่มีไฟล์ก็ส่งเลย
-            }
-        });
-    }
-
-    // --- ส่วนแสดงตัวอย่างรูปภาพ ---
     const fileInput = document.getElementById('file-input');
-    const previewContainer = document.getElementById('preview-container'); 
-    const imagePreview = document.getElementById('image-preview');         
-    const btnRemoveFile = document.getElementById('btn-remove-file');     
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const btnRemoveFile = document.getElementById('btn-remove-file');
 
     if (fileInput) {
         fileInput.addEventListener('change', function () {
             const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    imagePreview.src = e.target.result;
-                    previewContainer.style.display = 'inline-block';
-                }
-                reader.readAsDataURL(file);
-            }
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                previewContainer.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    if (btnRemoveFile) {
+        btnRemoveFile.addEventListener('click', () => {
+            fileInput.value = "";
+            previewContainer.style.display = 'none';
+            imagePreview.src = "";
         });
     }
 
-    if (btnRemoveFile) {
-        btnRemoveFile.addEventListener('click', function () {
-            fileInput.value = ""; 
-            previewContainer.style.display = 'none'; 
-        });
-    }
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = Object.fromEntries(new FormData(form).entries());
+        const file = fileInput ? fileInput.files[0] : null;
+
+        if (!data.firstname) return alert("กรุณากรอกชื่อ");
+        if (!data.lastname) return alert("กรุณากรอกนามสกุล");
+        if (!validateEmail(data.email)) return alert("รูปแบบอีเมลไม่ถูกต้อง");
+        if (!data.phone) return alert("กรุณากรอกเบอร์มือถือ");
+        if (!/^[0-9]{13}$/.test(data.id_card || "")) return alert("กรุณากรอกเลขบัตรประชาชน 13 หลัก");
+        if (!data.subject) return alert("กรุณาระบุหัวข้อร้องเรียน");
+        if (!data.event_time) return alert("กรุณาเลือกวันและเวลาที่เกิดเหตุ");
+        if (!data.location) return alert("กรุณาระบุสถานที่เกิดเหตุ");
+        if (!data.details || !data.details.trim()) return alert("กรุณากรอกรายละเอียดการร้องเรียน");
+
+        const submitBtn = form.querySelector('.btn-submit');
+        const originalText = submitBtn.innerText;
+        submitBtn.innerText = "กำลังส่งข้อมูล...";
+        submitBtn.disabled = true;
+
+        try {
+            const base64Image = file ? await readFileAsBase64(file) : null;
+
+            const payload = {
+                type: "complaint",
+                category: categoryInput.value,
+                firstname: data.firstname,
+                lastname: data.lastname,
+                email: data.email,
+                phone: data.phone,
+                id_card: data.id_card,
+                subject: data.subject,
+                location: data.location,
+                details: data.details,
+                event_time: data.event_time,
+                fileName: file ? file.name : "",
+                fileData: base64Image,
+            };
+
+            console.log("[Complaint] POST", window.APP_CONFIG.API_URL, payload);
+            let response;
+            try {
+                response = await fetch(window.APP_CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+            } catch (networkErr) {
+                console.error("[Complaint] Network/CORS error:", networkErr);
+                throw new Error("ติดต่อเซิร์ฟเวอร์ไม่ได้ – ตรวจสอบ CORS / Invoke URL ใน Console");
+            }
+            const text = await response.text();
+            console.log("[Complaint] status=", response.status, "body=", text.slice(0, 200));
+            if (!response.ok) {
+                let parsed = {}; try { parsed = JSON.parse(text); } catch {}
+                throw new Error(parsed.error || `Server error ${response.status}: ${text}`);
+            }
+            const result = text ? JSON.parse(text) : {};
+            sessionStorage.setItem('userComplaintData', JSON.stringify({
+                ...payload,
+                complaint_id: result.complaint_id,
+                image_url: result.image_url,
+            }));
+            window.location.href = "views/confirm.html";
+        } catch (error) {
+            console.error("ส่งข้อมูลล้มเหลว:", error);
+            alert("ไม่สามารถส่งข้อมูลได้: " + error.message);
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+        }
+    });
 });
+
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || "");
+}
+
+function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function safeJson(response) {
+    try { return await response.json(); } catch { return {}; }
+}

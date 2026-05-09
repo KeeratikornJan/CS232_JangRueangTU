@@ -11,7 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap"
     rel="stylesheet"
   >
-
+  <link rel="icon" type="image/x-icon" href="../image/JangRueang.png"/>
   <link rel="stylesheet" href="../css/layout-headerAdmin.css" />
   <link rel="stylesheet" href="../css/complaintsAdmin.css" />
 </head>
@@ -32,8 +32,11 @@
     </div>
 
     <div class="topbar-brand">
-      <div class="brand-main">JANGRUEANG <span class="brand-tu">TU</span></div>
-      <div class="brand-sub">ร้องเรียน แจ้งเหตุ ในมหาวิทยาลัยธรรมศาสตร์</div>
+      <a href="../../public-user-s3/index.html">
+          <img class="Logo"
+          src="../image/LOGO.png" 
+          alt="JangruengBlueLogo">
+      </a>
     </div>
   </header>
 
@@ -51,7 +54,7 @@
 
         <a class="sidebar-link active" href="#">
           <span>ร้องเรียน</span>
-          <span class="count-badge">14</span>
+          <span class="count-badge" id="sidebarComplaintCount">14</span>
         </a>
 
         <a class="sidebar-link" href="incidentAdmin.html">
@@ -78,7 +81,7 @@
           <div class="toolbar-left">
             <span class="toolbar-label">สถานะ :</span>
 
-            <button class="filter-btn blue" type="button" data-filter="ทั้งหมด">ทั้งหมด</button>
+            <button class="filter-btn blue active-filter" type="button" data-filter="ทั้งหมด">ทั้งหมด</button>
             <button class="filter-btn red" type="button" data-filter="ใหม่">ใหม่</button>
             <button class="filter-btn yellow" type="button" data-filter="กำลังดำเนิน">กำลังดำเนิน</button>
             <button class="filter-btn green" type="button" data-filter="เสร็จสิ้น">เสร็จสิ้น</button>
@@ -116,104 +119,8 @@
     </main>
   </div>
 
-  <!-- overlay ตอนเปิด popup -->
-  <div class="popup-overlay" id="popupOverlay"></div>
-
-  <!-- popup รายละเอียดร้องเรียน -->
-  <aside class="complaint-popup" id="complaintPopup" aria-hidden="true">
-    <div class="complaint-popup-header">
-      <div class="complaint-popup-id" id="popupCaseId">GU-5868544001</div>
-      <button class="complaint-popup-close" id="popupCloseBtn" type="button" aria-label="ปิด">
-        ×
-      </button>
-    </div>
-
-    <div class="complaint-popup-body">
-      <div class="popup-top-row">
-        <div class="popup-section-label">รายละเอียดเคส</div>
-        <div class="popup-location">
-          <span class="popup-location-icon">📍</span>
-          <span id="popupLocation">ห้องสมุดกลาง ชั้น 2</span>
-        </div>
-      </div>
-
-      <div class="popup-divider"></div>
-
-      <div class="popup-section">
-        <div class="popup-section-label">หัวข้อ</div>
-        <div class="popup-section-text popup-strong" id="popupTitle">
-          เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์
-        </div>
-      </div>
-
-      <div class="popup-section">
-        <div class="popup-section-label">รายละเอียด</div>
-        <div class="popup-section-text" id="popupDescription">
-          พบเครื่องปรับอากาศบริเวณโซนนั่งอ่านหนังสือ ชั้น 2 ห้องสมุดกลาง
-          ส่งเสียงดังรบกวนสมาธิ และอุณหภูมิไม่เย็นเหมือนปกติ ....
-        </div>
-      </div>
-
-      <div class="popup-section">
-        <div class="popup-section-label">ผู้แจ้ง</div>
-        <div class="popup-section-text popup-reporter-info">
-          <div><span class="popup-strong">ชื่อ-สกุล :</span> <span id="popupReporterName">สมใจ แสนดี</span></div>
-          <div><span class="popup-strong">Email :</span> <span id="popupReporterEmail">somjai.s@email.com</span></div>
-          <div><span class="popup-strong">หมายเลขบัตรประชาชน :</span> <span id="popupReporterId">1-4800-56181-34-5</span></div>
-          <div><span class="popup-strong">เบอร์มือถือ :</span> <span id="popupReporterPhone">081-234-5678</span></div>
-        </div>
-      </div>
-
-      <div class="popup-section">
-        <div class="popup-section-label">ข้อมูลแจ้งเหตุ</div>
-        <div class="popup-section-text popup-incident-info">
-          <div><span class="popup-strong">วันที่เกิดเหตุ :</span> <span id="popupIncidentDate">25 / 04 / 2569</span></div>
-          <div><span class="popup-strong">เวลาที่เกิดเหตุ :</span> <span id="popupIncidentTime">22:54:40</span></div>
-        </div>
-      </div>
-
-      <div class="popup-image-box">
-        <img id="popupImage" class="popup-image" src="" alt="complaint image" />
-        <div class="popup-image-placeholder" id="popupImagePlaceholder">
-          <span class="popup-image-icon">🖼️</span>
-        </div>
-      </div>
-
-      <div class="popup-form-card">
-        <label class="popup-form-label" for="popupDepartmentSelect">มอบหมายหน่วยงาน</label>
-        <select id="popupDepartmentSelect" class="popup-select">
-          <option value="">กรุณาเลือกหน่วยงาน</option>
-          <option value="กองบริการการศึกษา">กองบริการการศึกษา</option>
-          <option value="กองอาคารสถานที่และสิ่งแวดล้อม">กองอาคารสถานที่และสิ่งแวดล้อม</option>
-          <option value="สำนักนวัตกรรมดิจิทัล (IT)">สำนักนวัตกรรมดิจิทัล (IT)</option>
-          <option value="หน่วยยานพาหนะ (EV Shuttle)">หน่วยยานพาหนะ (EV Shuttle)</option>
-          <option value="กองกลาง (งานพัสดุและโสตฯ)">กองกลาง (งานพัสดุและโสตฯ)</option>
-          <option value="ศูนย์บริหารจัดการทรัพย์สิน">ศูนย์บริหารจัดการทรัพย์สิน</option>
-          <option value="กองจัดการความปลอดภัย (รปภ.)">กองจัดการความปลอดภัย (รปภ.)</option>
-          <option value="อื่นๆ">อื่นๆ</option>
-        </select>
-      </div>
-
-      <div class="popup-form-card">
-        <label class="popup-form-label" for="popupNote">บันทึกเพิ่มเติม (ไม่บังคับ)</label>
-        <textarea
-          id="popupNote"
-          class="popup-textarea"
-          placeholder="เช่น ติดต่อหน่วยงานแล้ว รอการตอบกลับ......"
-        ></textarea>
-      </div>
-
-      <div class="popup-actions">
-        <button class="popup-btn popup-btn-success" type="button" id="popupSaveBtn">
-          บันทึกการเปลี่ยนแปลง
-        </button>
-        <button class="popup-btn popup-btn-danger" type="button" id="popupCancelBtn">
-          ยกเลิก
-        </button>
-      </div>
-    </div>
-  </aside>
-
+  <script src="../js/mockData.js"></script>
+  <script src="../js/admin.js"></script>
   <script src="../js/complaintsAdmin.js"></script>
 </body>
 </html>

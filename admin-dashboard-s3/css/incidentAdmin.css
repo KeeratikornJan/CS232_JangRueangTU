@@ -7,22 +7,46 @@
   margin-top: -2px;
 }
 
+.sidebar-incident-wrap .sidebar-link {
+  border-radius: 16px 16px;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
+}
+.sidebar-link-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .sidebar-submenu {
   display: block;
   text-decoration: none;
-  color: #2f2f2f;
-  background: #eef1f6;
+  color: #3a4560;
+  background: #e2e9f4;
   border-radius: 0 0 18px 18px;
-  padding: 12px 14px 14px;
-  margin-top: -6px;
+  padding: 10px 14px 13px 22px;
+  margin-top: 0;
   margin-left: 10px;
   margin-right: 10px;
   font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  transition: background 0.2s ease, color 0.2s ease,
+              padding-left 0.18s ease, box-shadow 0.2s ease;
+}
+.sidebar-submenu:hover {
+  background: rgba(63, 121, 208, 0.55);
+  color: #fff;
+  padding-left: 26px;
+  box-shadow: inset 4px 0 0 #ffffffbb;
 }
 
 .active-submenu {
-  background: #eef1f6;
+  background: #c8d6ee;
+  color: #1a3060;
+  font-weight: 600;
 }
 
 /* CONTENT */
@@ -151,6 +175,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* Inline images on the incident card must stay inside the box even when the
+   source asset is larger than the container. */
+.image-box img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
 }
 
 .image-icon {
@@ -187,3 +226,91 @@
     grid-template-columns: 250px 1fr 220px;
   }
 }
+
+/* ===== POPUP ===== */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.25s ease;
+  z-index: 90;
+}
+.popup-overlay.show { opacity: 1; visibility: visible; }
+
+.complaint-popup {
+  position: fixed;
+  top: 0;
+  right: -640px;
+  width: 610px;
+  max-width: 96vw;
+  height: 100vh;
+  background: #eef2f7;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.14);
+  z-index: 100;
+  overflow-y: auto;
+  transition: right 0.3s ease;
+}
+.complaint-popup.show { right: 0; }
+
+.complaint-popup-header {
+  position: sticky;
+  top: 0;
+  background: #eef2f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 34px 16px;
+  border-bottom: 1px solid #d5d9de;
+}
+.complaint-popup-id { font-size: 22px; font-weight: 500; }
+.complaint-popup-close {
+  width: 32px; height: 32px;
+  border: 2px solid #333; border-radius: 6px;
+  background: #fff; font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.complaint-popup-body { padding: 22px 34px 34px; }
+.popup-top-row { display: flex; justify-content: space-between; align-items: center; }
+.popup-section-label { color: #9a9a9a; font-size: 15px; font-weight: 600; }
+.popup-location { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+.popup-divider { height: 1px; background: #bfc5cb; margin: 10px 0 16px; }
+.popup-section { margin-bottom: 18px; }
+.popup-section-text { font-size: 16px; line-height: 1.5; }
+.popup-strong { font-weight: 700; }
+
+.popup-image-box {
+  width: 100%; height: 240px;
+  margin: 18px 0 26px;
+  background: #f4f1f1; border-radius: 14px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.popup-image { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: none; }
+.popup-image-placeholder { font-size: 44px; opacity: 0.7; }
+
+.popup-form-card {
+  background: #fff; border-radius: 14px;
+  padding: 14px 18px 18px; margin-bottom: 22px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+.popup-form-label { display: block; margin-bottom: 12px; font-size: 15px; font-weight: 700; }
+.popup-select {
+  width: 100%; height: 52px;
+  border: 2px solid #305ea7; border-radius: 10px;
+  background: #4478d1; color: #fff;
+  padding: 0 14px; font-family: inherit; font-size: 14px; font-weight: 600; outline: none;
+}
+.popup-textarea {
+  width: 100%; min-height: 100px;
+  border: 1px solid #d5d5d5; border-radius: 10px; padding: 12px;
+  font-family: inherit; font-size: 14px; resize: vertical;
+}
+.popup-actions { display: flex; gap: 12px; }
+.popup-btn {
+  border: none; border-radius: 10px; height: 52px;
+  font-family: inherit; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
+}
+.popup-btn-success { flex: 1; background: #538759; }
+.popup-btn-danger  { width: 160px; background: #e4443e; }

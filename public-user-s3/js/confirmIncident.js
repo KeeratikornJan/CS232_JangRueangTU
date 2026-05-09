@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 2. สุ่มเลขรหัสคำร้อง
                     const idSpan = document.getElementById('complaint-id');
                     if (idSpan) {
-                        idSpan.innerText = "EMG-" + Math.floor(Math.random() * 1000000000);
+                        idSpan.innerText = data.complaint_id || "-";
                     }
                 } else {
                     alert("ส่งข้อมูลสำเร็จ!"); // กรณีหา Popup ไม่เจอให้ Alert บอกก่อน

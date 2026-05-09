@@ -1,316 +1,307 @@
-const pieData = [
-  { label: "สถานที่", percent: 23, color: "#ff9800" },
-  { label: "บุคลากร", percent: 15, color: "#e056f1" },
-  { label: "ร้านค้า", percent: 7, color: "#18c4c7" },
-  { label: "ระบบ IT", percent: 17, color: "#a4b800" },
-  { label: "อุปกรณ์อิเล็กทรอนิกส์", percent: 10, color: "#c438e8" },
-  { label: "อื่นๆ", percent: 8, color: "#ff0b67" },
-  { label: "รถโดยสาร", percent: 20, color: "#56c108" }
-];
+// Admin dashboard – stats, pie chart, latest cases feed (live data only).
+let DASHBOARD_CASES = [];
+let feedCases     = [];
+let feedSortOrder = 'latest';
 
-const categories = [
-  { name: "สถานที่", percent: 23, color: "#ff9800" },
-  { name: "บุคลากร", percent: 15, color: "#e056f1" },
-  { name: "รถโดยสาร EV..", percent: 20, color: "#2fb50f" },
-  { name: "ระบบ IT", percent: 17, color: "#a4b800" },
-  { name: "อุปกรณ์อิเล็ก..", percent: 10, color: "#c438e8" },
-  { name: "ร้านค้า", percent: 7, color: "#18c4c7" },
-  { name: "อื่นๆ", percent: 8, color: "#ff0b67" }
-];
+document.addEventListener('DOMContentLoaded', () => {
+    createCaseDetailPopup();
+    fetchDashboardData();
 
-const summaries = [
-  { label: "ทั้งหมด", value: 50, icon: "", bg: "bg-blue" },
-  { label: "รอดำเนินการ", value: 17, icon: "✳", bg: "bg-red" },
-  { label: "กำลังดำเนินการ", value: 33, icon: "🔧", bg: "bg-yellow" },
-  { label: "เสร็จสิ้น", value: 29, icon: "✓", bg: "bg-green" }
-];
-
-const feeds = [
-  {
-    title: "เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์",
-    code: "GU-5868544001",
-    sideColor: "side-green",
-    tags: [
-      { text: "อุปกรณ์อิเล็กทรอนิกส์", cls: "tag-purple" },
-      { text: "⚠ พบเคสซ้ำ 5", cls: "tag-warning" }
-    ],
-    alert: true,
-    time: "4 นาที"
-  },
-  {
-    title: "พบสุนัขจรจัดไล่กวดนักศึกษาบริเวณโรงอาหารกลาง",
-    code: "GU-5868544002",
-    sideColor: "side-green",
-    tags: [
-      { text: "อื่นๆ", cls: "tag-pink" }
-    ],
-    alert: false,
-    time: "10 นาที"
-  },
-  {
-    title: "ท่อประปาแตกบริเวณหน้าอาคารเรียนรวม น้ำไหลท่วมทางเดิน",
-    code: "EMG-2471900",
-    sideColor: "side-red",
-    tags: [
-      { text: "เหตุฉุกเฉิน", cls: "tag-pink" }
-    ],
-    alert: false,
-    time: "21 นาที"
-  },
-  {
-    title: "ลิฟต์ค้างชั้น 4 อาคารวิศวกรรม มีนักศึกษาติดอยู่ข้างใน 2 คน",
-    code: "EMG-2471901",
-    sideColor: "side-red",
-    tags: [
-      { text: "เหตุฉุกเฉิน", cls: "tag-pink" }
-    ],
-    alert: false,
-    time: "1 วัน"
-  },
-  {
-    title: "เจ้าหน้าที่หน่วยงาน XXX พูดจาไม่สุภาพขณะขอติดต่อรับเอกสาร",
-    code: "GU-5868544003",
-    sideColor: "side-green",
-    tags: [
-      { text: "บุคลากร", cls: "tag-purple" },
-      { text: "⚠ พบเคสซ้ำ 5", cls: "tag-warning" }
-    ],
-    alert: true,
-    time: "2 วัน"
-  },
-  {
-    title: "ไฟส่องสว่างทางเดินหอพักหญิงขาด ทำให้ทางเปลี่ยวและอันตราย",
-    code: "GU-5868544004",
-    sideColor: "side-green",
-    tags: [
-      { text: "อุปกรณ์อิเล็กทรอนิกส์", cls: "tag-purple" },
-      { text: "⚠ พบเคสซ้ำ 5", cls: "tag-warning" }
-    ],
-    alert: true,
-    time: "2 วัน"
-  },
-  {
-    title: "พบงูเหลือมขนาดใหญ่บริเวณพุ่มไม้ข้างสนามฟุตบอล",
-    code: "EMG-2471902",
-    sideColor: "side-red",
-    tags: [
-      { text: "เหตุฉุกเฉิน", cls: "tag-pink" }
-    ],
-    alert: false,
-    time: "3 วัน"
-  }
-];
-
-const similarCaseData = {
-  total: 5,
-  category: "หมวดหมู่ สถานที่",
-  location: "📍 ห้องสมุดกลาง ชั้น 2",
-  month: "เดือน มีนาคม ปี 2569",
-  caseNumber: 1,
-  caseId: "GU-5868544001",
-  title: "เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์",
-  status: "ร้องเรียน",
-  time: "4 นาที",
-  topic: "เครื่องปรับอากาศในห้องสมุดเสียงดังและไม่เย็นมา 1 สัปดาห์",
-  detail:
-    "พบเครื่องปรับอากาศบริเวณโซนที่นั่งอ่านหนังสือ ชั้น 2 ห้องสมุดกลาง ส่งเสียงดังรบกวนสมาธิ และมีน้ำหยดลงบนโต๊ะอ่านหนังสือมา 3 วันแล้วครับ",
-  reporterName: "สมใจ แสนดี",
-  reporterEmail: "somjai.s@email.com",
-  reporterCitizenId: "1-4800-56181-34-5",
-  reporterPhone: "081-234-5678",
-  incidentDate: "25/04/2569",
-  incidentTime: "22:54:40"
-};
-
-const pieSvg = document.getElementById("pieSvg");
-const categoryList = document.getElementById("categoryList");
-const summaryCards = document.getElementById("summaryCards");
-const feedList = document.getElementById("feedList");
-
-const similarCasesOverlay = document.getElementById("similarCasesOverlay");
-const similarCaseDetail = document.getElementById("similarCaseDetail");
-const closeSimilarCasesBtn = document.getElementById("closeSimilarCasesBtn");
-const toggleSimilarDetailBtn = document.getElementById("toggleSimilarDetailBtn");
-const bottomToggleSimilarBtn = document.getElementById("bottomToggleSimilarBtn");
-
-function polarToCartesian(cx, cy, r, angleDeg) {
-  const rad = (angleDeg - 90) * Math.PI / 180;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy + r * Math.sin(rad)
-  };
-}
-
-function describeArc(cx, cy, r, startAngle, endAngle) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
-  return [
-    `M ${cx} ${cy}`,
-    `L ${start.x} ${start.y}`,
-    `A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
-    "Z"
-  ].join(" ");
-}
-
-function renderPieChart() {
-  const cx = 255;
-  const cy = 176;
-  const r = 110;
-
-  let currentAngle = 0;
-
-  const slices = [];
-  const labels = [];
-
-  pieData.forEach((item) => {
-    const angle = (item.percent / 100) * 360;
-    const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
-    const middleAngle = startAngle + angle / 2;
-
-    const path = describeArc(cx, cy, r, startAngle, endAngle);
-    slices.push(
-      `<path class="pie-slice" d="${path}" fill="${item.color}"></path>`
-    );
-
-    const labelPoint = polarToCartesian(cx, cy, r * 0.62, middleAngle);
-    labels.push(
-      `<text class="pie-percent" x="${labelPoint.x}" y="${labelPoint.y}">${item.percent}%</text>`
-    );
-
-    currentAngle = endAngle;
-  });
-
-  pieSvg.innerHTML = `
-    ${slices.join("")}
-    ${labels.join("")}
-  `;
-}
-
-function renderCategories() {
-  categoryList.innerHTML = categories
-    .map((item) => {
-      return `
-        <div class="category-item">
-          <div class="category-name">${item.name}</div>
-          <div class="progress-track">
-            <div class="progress-fill" style="width:${item.percent}%; background:${item.color};"></div>
-          </div>
-          <div class="category-percent">${item.percent}%</div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function renderSummaries() {
-  summaryCards.innerHTML = summaries
-    .map((item) => {
-      return `
-        <div class="summary-card ${item.bg}">
-          <div class="summary-left">
-            <div class="summary-label">${item.label}</div>
-            <div class="summary-value">${item.value}</div>
-          </div>
-          <div class="summary-icon">${item.icon}</div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function renderFeeds() {
-  feedList.innerHTML = feeds
-    .map((item) => {
-      const tagsHtml = item.tags
-        .map((tag) => `<span class="feed-tag ${tag.cls}">${tag.text}</span>`)
-        .join("");
-
-      return `
-        <div class="feed-row">
-          <div class="feed-side ${item.sideColor}"></div>
-
-          <div class="feed-main">
-            <div class="feed-title">${item.title}</div>
-            <div class="feed-code">${item.code}</div>
-            <div class="feed-tags">${tagsHtml}</div>
-          </div>
-
-          <div class="feed-alert">
-            ${
-              item.alert
-                ? `<button type="button" class="alert-chip" onclick="openSimilarCases()">
-                    <span class="alert-icon">⚠</span>
-                    <span>พบเคสซ้ำ</span>
-                    <span class="alert-badge">5</span>
-                  </button>`
-                : ``
-            }
-          </div>
-
-          <div class="feed-time">${item.time}</div>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function openSimilarCases() {
-  if (!similarCasesOverlay) return;
-  similarCasesOverlay.classList.remove("hidden");
-}
-
-function closeSimilarCases() {
-  if (!similarCasesOverlay) return;
-  similarCasesOverlay.classList.add("hidden");
-}
-
-function setToggleSymbol() {
-  if (!similarCaseDetail || !toggleSimilarDetailBtn || !bottomToggleSimilarBtn) return;
-
-  const isHidden = similarCaseDetail.classList.contains("collapsed");
-  const symbol = isHidden ? "˅" : "˄";
-
-  toggleSimilarDetailBtn.textContent = symbol;
-  bottomToggleSimilarBtn.textContent = symbol;
-}
-
-function toggleSimilarDetail() {
-  if (!similarCaseDetail) return;
-  similarCaseDetail.classList.toggle("collapsed");
-  setToggleSymbol();
-}
-
-if (closeSimilarCasesBtn) {
-  closeSimilarCasesBtn.addEventListener("click", closeSimilarCases);
-}
-
-if (toggleSimilarDetailBtn) {
-  toggleSimilarDetailBtn.addEventListener("click", toggleSimilarDetail);
-}
-
-if (bottomToggleSimilarBtn) {
-  bottomToggleSimilarBtn.addEventListener("click", toggleSimilarDetail);
-}
-
-if (similarCasesOverlay) {
-  similarCasesOverlay.addEventListener("click", function (event) {
-    if (event.target === similarCasesOverlay) {
-      closeSimilarCases();
-    }
-  });
-}
-
-document.addEventListener("keydown", function (event) {
-  if (event.key === "Escape") {
-    closeSimilarCases();
-  }
+    document.getElementById('feedSortBtn').addEventListener('click', () => {
+        feedSortOrder = feedSortOrder === 'latest' ? 'oldest' : 'latest';
+        const btn = document.getElementById('feedSortBtn');
+        btn.innerHTML = feedSortOrder === 'latest'
+            ? '⇅ <span>ล่าสุด</span>'
+            : '⇅ <span>เก่าสุด</span>';
+        sortAndRenderFeed();
+    });
 });
 
-renderPieChart();
-renderCategories();
-renderSummaries();
-renderFeeds();
-setToggleSymbol();
+function computeDashboardData(rawItems) {
+    const isPending = i => ['', 'pending', 'รอดำเนินการ', 'ใหม่'].includes((i.status || '').toLowerCase());
+    const complaints = rawItems.filter(i => window.AppAPI.isComplaint(i));
+    const incidents = rawItems.filter(i => window.AppAPI.isIncident(i));
+    // Sidebar badges should reflect *pending* work only — the same definition
+    // used by refreshSidebarCounts in admin.js.
+    const pendingComplaints = complaints.filter(isPending).length;
+    const pendingIncidents = incidents.filter(isPending).length;
+    const pending = rawItems.filter(isPending).length;
+    const inProgress = rawItems.filter(i =>
+        ['in_progress', 'กำลังดำเนินการ', 'กำลังดำเนิน'].includes((i.status || '').toLowerCase())
+    ).length;
+    const resolved = rawItems.filter(i =>
+        ['resolved', 'completed', 'success', 'เสร็จสิ้น'].includes((i.status || '').toLowerCase())
+    ).length;
+
+    const categoryCounts = {};
+    rawItems.forEach(item => {
+        const cat = item.category || 'อื่นๆ';
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+    const categories = Object.entries(categoryCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+
+    const latestCases = [...rawItems]
+        .filter(i => i.timestamp)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 10);
+
+    return {
+        stats: {
+            incident_count: incidents.length,
+            complaint_count: complaints.length,
+            sidebar_incident_count: pendingIncidents,
+            sidebar_complaint_count: pendingComplaints,
+            pending_cases: pending,
+            in_progress_cases: inProgress,
+            resolved_cases: resolved
+        },
+        categories,
+        latest_cases: latestCases
+    };
+}
+
+async function fetchDashboardData() {
+    try {
+        const rawItems = await window.AppAPI.loadCases();
+        DASHBOARD_CASES = rawItems;
+        const data = computeDashboardData(rawItems);
+
+        updateStatsUI(data.stats);
+        renderSummaryCards(data.stats);
+
+        const categoriesWithColor = data.categories.map(cat => ({
+            name: cat.name,
+            count: cat.count,
+            color: CATEGORY_COLORS[cat.name] || "#999999"
+        }));
+        renderCategoryList(categoriesWithColor);
+        drawPieChart(categoriesWithColor);
+        feedCases = rawItems.filter(i => i.timestamp);
+        sortAndRenderFeed();
+    } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        const feed = document.getElementById('feedList');
+        if (feed) feed.innerHTML = `<p style="text-align:center;padding:20px;color:#c00;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
+    }
+}
+
+function updateStatsUI(stats) {
+    // Sidebar badges count *pending only* — must match admin.js logic.
+    const incidentBadges = document.querySelectorAll('a[href$="incidentAdmin.html"] .count-badge, #sidebarIncidentCount');
+    const complaintBadges = document.querySelectorAll('a[href$="complaintsAdmin.html"] .count-badge, #sidebarComplaintCount');
+    incidentBadges.forEach(el => { el.textContent = stats.sidebar_incident_count || 0; });
+    complaintBadges.forEach(el => { el.textContent = stats.sidebar_complaint_count || 0; });
+}
+
+function renderSummaryCards(stats) {
+    const container = document.getElementById('summaryCards');
+    if (!container) return;
+    const totalCases = (stats.incident_count || 0) + (stats.complaint_count || 0);
+    const cards = [
+        { label: "ทั้งหมด", count: totalCases, icon: "", bg: "#3f79d0" },
+        { label: "รอดำเนินการ", count: stats.pending_cases || 0, icon: "✳", bg: "#e53d39" },
+        { label: "กำลังดำเนินการ", count: stats.in_progress_cases || 0, icon: "🔧", bg: "#efc84b" },
+        { label: "เสร็จสิ้น", count: stats.resolved_cases || 0, icon: "✓", bg: "#4d7f4f" },
+    ];
+    container.innerHTML = cards.map(card => `
+        <div class="summary-card" style="background-color: ${card.bg};">
+          <div class="summary-left">
+            <div class="summary-label">${card.label}</div>
+            <div class="summary-value">${card.count}</div>
+          </div>
+          <div class="summary-icon">${card.icon}</div>
+        </div>`).join('');
+}
+
+function renderCategoryList(categories) {
+    const listEl = document.getElementById('categoryList');
+    if (!listEl) return;
+    const total = categories.reduce((sum, c) => sum + c.count, 0);
+    listEl.innerHTML = categories.map(cat => {
+        const pct = total > 0 ? Math.round((cat.count / total) * 100) : 0;
+        return `
+        <div class="category-item">
+            <span class="category-name">${cat.name}</span>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${pct}%;background-color:${cat.color};"></div>
+            </div>
+            <span class="category-percent">${pct}%</span>
+        </div>`;
+    }).join('');
+}
+
+function drawPieChart(categories) {
+    const svg = document.getElementById('pieSvg');
+    if (!svg) return;
+    const CX = 170, CY = 170, R = 130;
+    svg.setAttribute('viewBox', '0 0 340 340');
+    const total = categories.reduce((sum, c) => sum + c.count, 0);
+    if (total === 0) { svg.innerHTML = ''; return; }
+    let cumulative = 0;
+    svg.innerHTML = '';
+    categories.forEach(cat => {
+        const safePercent = Math.min(cat.count / total, 0.9999);
+        const [sx, sy] = pieCoords(cumulative, CX, CY, R);
+        cumulative += safePercent;
+        const [ex, ey] = pieCoords(cumulative, CX, CY, R);
+        const largeArc = safePercent > 0.5 ? 1 : 0;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${CX} ${CY} L ${sx} ${sy} A ${R} ${R} 0 ${largeArc} 1 ${ex} ${ey} Z`);
+        path.setAttribute('fill', cat.color);
+        path.setAttribute('class', 'pie-slice');
+        svg.appendChild(path);
+    });
+}
+
+function pieCoords(percent, cx, cy, r) {
+    const a = 2 * Math.PI * percent - Math.PI / 2;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+
+function renderLatestCases(cases) {
+    const feedList = document.getElementById('feedList');
+    if (!feedList) return;
+    if (!cases.length) {
+        feedList.innerHTML = '<p style="text-align:center;padding:20px;">ไม่มีรายการใหม่</p>';
+        return;
+    }
+    feedList.innerHTML = cases.map(item => {
+        const id = caseId(item);
+        const subject = item.subject || 'แจ้งเหตุ / ร้องเรียน';
+        const cat = item.category || '';
+        const rawStatus = (item.status || '').toLowerCase();
+        const ts = item.timestamp ? formatTimestamp(item.timestamp) : '';
+
+        let displayStatus, sideColor;
+        if (rawStatus === "pending" || rawStatus === "รอดำเนินการ") { displayStatus = "รอดำเนินการ"; sideColor = "side-red"; }
+        else if (rawStatus === "in_progress" || rawStatus === "กำลังดำเนินการ") { displayStatus = "กำลังดำเนินการ"; sideColor = "side-yellow"; }
+        else if (rawStatus === "resolved" || rawStatus === "success" || rawStatus === "เสร็จสิ้น") { displayStatus = "เสร็จสิ้น"; sideColor = "side-green"; }
+        else { displayStatus = rawStatus; sideColor = "side-gray"; }
+
+        const tagCssClass = CATEGORY_CLASS_MAP[cat] || "tag-category7";
+        const tagsHtml = `<span class="feed-tag ${tagCssClass}">${cat}</span>`;
+
+        return `
+        <div class="feed-row" style="cursor: pointer;" onclick="viewDetail('${id}')">
+          <div class="feed-side ${sideColor}"></div>
+          <div class="feed-main">
+            <div class="feed-title">${subject}</div>
+            <div class="feed-code">${id}</div>
+            <div class="feed-tags">${tagsHtml}</div>
+          </div>
+          <div class="feed-alert"></div>
+          <div class="feed-time">${ts}</div>
+        </div>`;
+    }).join('');
+}
+
+function sortAndRenderFeed() {
+    const sorted = [...feedCases]
+        .sort((a, b) => {
+            const diff = new Date(b.timestamp) - new Date(a.timestamp);
+            return feedSortOrder === 'latest' ? diff : -diff;
+        })
+        .slice(0, 10);
+    renderLatestCases(sorted);
+}
+
+function createCaseDetailPopup() {
+    const overlay = document.createElement('div');
+    overlay.className = 'case-detail-overlay';
+    overlay.id = 'caseDetailOverlay';
+
+    const popup = document.createElement('aside');
+    popup.className = 'case-detail-popup';
+    popup.id = 'caseDetailPopup';
+    popup.setAttribute('aria-hidden', 'true');
+    popup.innerHTML = `
+        <div class="case-detail-header">
+          <div class="case-detail-id" id="caseDetailId">-</div>
+          <button class="case-detail-close" id="caseDetailCloseBtn" type="button">×</button>
+        </div>
+        <div class="case-detail-body">
+          <div class="popup-top-row">
+            <div class="popup-section-label">รายละเอียดเคส</div>
+            <div class="popup-location">
+              <span>📍</span>
+              <span id="caseDetailLocation">-</span>
+            </div>
+          </div>
+          <div class="popup-divider"></div>
+          <div class="popup-section">
+            <div class="popup-section-label">หัวข้อ</div>
+            <div class="popup-section-text popup-strong" id="caseDetailTitle">-</div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">รายละเอียด</div>
+            <div class="popup-section-text" id="caseDetailDesc">-</div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">ผู้แจ้ง</div>
+            <div class="popup-section-text">
+              <div><span class="popup-strong">ชื่อ-สกุล :</span> <span id="caseDetailName">-</span></div>
+              <div><span class="popup-strong">Email :</span> <span id="caseDetailEmail">-</span></div>
+              <div><span class="popup-strong">หมายเลขบัตรประชาชน :</span> <span id="caseDetailIdCard">-</span></div>
+              <div><span class="popup-strong">เบอร์มือถือ :</span> <span id="caseDetailPhone">-</span></div>
+            </div>
+          </div>
+          <div class="popup-section">
+            <div class="popup-section-label">ข้อมูลแจ้งเหตุ</div>
+            <div class="popup-section-text">
+              <div><span class="popup-strong">วันที่เกิดเหตุ :</span> <span id="caseDetailDate">-</span></div>
+              <div><span class="popup-strong">เวลาที่เกิดเหตุ :</span> <span id="caseDetailTime">-</span></div>
+            </div>
+          </div>
+          <div class="popup-image-box">
+            <img id="caseDetailImage" class="popup-image" src="" alt="case image" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <div class="popup-image-placeholder" id="caseDetailImgPlaceholder">🖼️</div>
+          </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(popup);
+
+    document.getElementById('caseDetailCloseBtn').addEventListener('click', closeCaseDetail);
+    overlay.addEventListener('click', closeCaseDetail);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCaseDetail(); });
+}
+
+function viewDetail(id) {
+    const item = DASHBOARD_CASES.find(i => caseId(i) === id);
+    if (!item) return;
+    document.getElementById('caseDetailId').textContent = caseId(item);
+    document.getElementById('caseDetailLocation').textContent = item.location || '-';
+    document.getElementById('caseDetailTitle').textContent = item.subject || '-';
+    document.getElementById('caseDetailDesc').textContent = item.details || '-';
+    document.getElementById('caseDetailName').textContent = item.fullname || `${item.firstname || ''} ${item.lastname || ''}`.trim() || '-';
+    document.getElementById('caseDetailEmail').textContent = item.email || '-';
+    document.getElementById('caseDetailIdCard').textContent = item.id_card || '-';
+    document.getElementById('caseDetailPhone').textContent = item.phone || '-';
+    document.getElementById('caseDetailDate').textContent = item.event_time ? item.event_time.split('T')[0] : '-';
+    document.getElementById('caseDetailTime').textContent = item.event_time && item.event_time.includes('T') ? item.event_time.split('T')[1] : '-';
+
+    const img = document.getElementById('caseDetailImage');
+    const ph = document.getElementById('caseDetailImgPlaceholder');
+    const url = item.image_url_presigned || item.image_url || '';
+    if (url) {
+        setCaseImage(img, url);
+        img.style.display = 'block';
+        ph.style.display = 'none';
+    } else {
+        setCaseImage(img, '');
+        img.style.display = 'none';
+        ph.style.display = 'flex';
+    }
+
+    document.getElementById('caseDetailPopup').classList.add('show');
+    document.getElementById('caseDetailOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCaseDetail() {
+    document.getElementById('caseDetailPopup').classList.remove('show');
+    document.getElementById('caseDetailOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+}
