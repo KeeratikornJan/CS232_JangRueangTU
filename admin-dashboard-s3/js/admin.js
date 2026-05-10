@@ -181,8 +181,6 @@ function findSimilarCases(currentItem, allItems) {
         .slice(0, 5);
 }
 
-<<<<<<< HEAD
-=======
 // --- Topbar profile (avatar + name) ----------------------------------------
 function _decodeJwtPayload(token) {
     try {
@@ -244,7 +242,6 @@ function initTopbarProfile() {
 }
 
 document.addEventListener('DOMContentLoaded', initTopbarProfile);
->>>>>>> dev
 document.addEventListener('DOMContentLoaded', refreshSidebarCounts);
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('img.popup-image, img[data-case-image]').forEach(applyImageCorsAttrs);
@@ -259,11 +256,7 @@ function _loginPageHref() {
     // dashboardAdmin.html lives at the dashboard root; everything else under
     // views/. Detect via the current pathname rather than hard-coding either.
     const path = (window.location.pathname || '').toLowerCase();
-<<<<<<< HEAD
-    return path.indexOf('/views/') >= 0 ? 'LoginPage.html' : 'views/LoginPage.html';
-=======
     return path.indexOf('/views/') >= 0 ? '../LoginPage.html' : 'LoginPage.html';
->>>>>>> dev
 }
 
 function _clearAuthTokens() {
