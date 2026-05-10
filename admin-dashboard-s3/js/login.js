@@ -13,7 +13,11 @@
 
 const COGNITO_USER_POOL_ID = 'us-east-1_TGgji2jjl';
 const COGNITO_CLIENT_ID    = '3vac4ifvp4jdj9fsmk8dd2eqr0';
+<<<<<<< HEAD
 const POST_LOGIN_REDIRECT  = '../dashboardAdmin.html';
+=======
+const POST_LOGIN_REDIRECT  = 'views/dashboardAdmin.html';
+>>>>>>> dev
 
 document.addEventListener('DOMContentLoaded', () => {
   initPasswordToggle();

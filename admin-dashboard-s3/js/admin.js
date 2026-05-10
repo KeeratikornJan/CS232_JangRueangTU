@@ -181,6 +181,70 @@ function findSimilarCases(currentItem, allItems) {
         .slice(0, 5);
 }
 
+<<<<<<< HEAD
+=======
+// --- Topbar profile (avatar + name) ----------------------------------------
+function _decodeJwtPayload(token) {
+    try {
+        const b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(b64));
+    } catch { return null; }
+}
+
+function _makeInitialsSvg(name) {
+    const parts = name.trim().split(/\s+/);
+    const initials = (parts.length >= 2
+        ? parts[0][0] + parts[1][0]
+        : (parts[0] || 'A')[0]
+    ).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48">`
+        + `<circle cx="24" cy="24" r="24" fill="#5a7fc2"/>`
+        + `<text x="24" y="30" text-anchor="middle" font-family="sans-serif" `
+        + `font-size="17" font-weight="bold" fill="#fff">${initials}</text></svg>`;
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+function initTopbarProfile() {
+    const avatarEl = document.querySelector('.admin-avatar');
+    const nameEl   = document.querySelector('.admin-name');
+    if (!avatarEl && !nameEl) return;
+
+    const token = sessionStorage.getItem('id_token') || sessionStorage.getItem('idToken');
+    if (!token) {
+        if (avatarEl) avatarEl.style.display = 'none';
+        if (nameEl)   nameEl.style.display   = 'none';
+        return;
+    }
+
+    const payload = _decodeJwtPayload(token);
+    if (!payload) {
+        if (avatarEl) avatarEl.style.display = 'none';
+        if (nameEl)   nameEl.style.display   = 'none';
+        return;
+    }
+
+    const rawName = (
+        payload.name
+        || (payload.given_name ? `${payload.given_name} ${payload.family_name || ''}`.trim() : '')
+        || payload.email
+        || sessionStorage.getItem('cognitoUsername')
+        || 'Admin'
+    );
+    const displayName = rawName.includes('@') ? rawName.split('@')[0] : rawName;
+
+    if (nameEl) {
+        nameEl.textContent  = displayName;
+        nameEl.style.display = '';
+    }
+
+    if (avatarEl) {
+        avatarEl.src = payload.picture || _makeInitialsSvg(displayName);
+        avatarEl.style.display = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initTopbarProfile);
+>>>>>>> dev
 document.addEventListener('DOMContentLoaded', refreshSidebarCounts);
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('img.popup-image, img[data-case-image]').forEach(applyImageCorsAttrs);
@@ -195,7 +259,11 @@ function _loginPageHref() {
     // dashboardAdmin.html lives at the dashboard root; everything else under
     // views/. Detect via the current pathname rather than hard-coding either.
     const path = (window.location.pathname || '').toLowerCase();
+<<<<<<< HEAD
     return path.indexOf('/views/') >= 0 ? 'LoginPage.html' : 'views/LoginPage.html';
+=======
+    return path.indexOf('/views/') >= 0 ? '../LoginPage.html' : 'LoginPage.html';
+>>>>>>> dev
 }
 
 function _clearAuthTokens() {

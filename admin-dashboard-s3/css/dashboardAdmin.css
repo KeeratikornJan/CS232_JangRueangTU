@@ -284,10 +284,13 @@
   border-bottom: 1px solid #dddddd;
 }
 
+<<<<<<< HEAD
 .feed-row:last-child {
   border-bottom: none;
 }
 
+=======
+>>>>>>> dev
 .feed-side {
   height: 100%;
 }
@@ -887,7 +890,10 @@
 .material-symbols-outlined {
     font-size: 50px;
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> dev
 }
 
 /* ==================== Similar Cases Modal (.sim-*) ==================== */
@@ -907,8 +913,13 @@
   background: #fff;
   border-radius: 18px;
   width: 100%;
+<<<<<<< HEAD
   max-width: 860px;
   max-height: 90vh;
+=======
+  max-width: 1000px;
+  max-height: 120vh;
+>>>>>>> dev
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -934,7 +945,11 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
+<<<<<<< HEAD
   background: #f2cd4b;
+=======
+  background: #f2b84b;
+>>>>>>> dev
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1071,7 +1086,11 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 28px;
+<<<<<<< HEAD
   background: #f8f5ee;
+=======
+  background: #fff9f3;
+>>>>>>> dev
   padding: 22px 24px;
   border-radius: 10px;
   margin: 0 4px;
@@ -1169,5 +1188,8 @@
   .sim-case-card { grid-template-columns: 1fr; gap: 0; }
   .sim-summary-bar { gap: 10px; padding: 10px 16px 14px; }
   .sim-modal-title { font-size: 22px; }
+<<<<<<< HEAD
 >>>>>>> admin
+=======
+>>>>>>> dev
 }
