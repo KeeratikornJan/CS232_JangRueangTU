@@ -221,13 +221,14 @@ function initTopbarProfile() {
         return;
     }
 
-    const displayName = (
+    const rawName = (
         payload.name
         || (payload.given_name ? `${payload.given_name} ${payload.family_name || ''}`.trim() : '')
         || payload.email
         || sessionStorage.getItem('cognitoUsername')
         || 'Admin'
     );
+    const displayName = rawName.includes('@') ? rawName.split('@')[0] : rawName;
 
     if (nameEl) {
         nameEl.textContent  = displayName;
@@ -255,7 +256,7 @@ function _loginPageHref() {
     // dashboardAdmin.html lives at the dashboard root; everything else under
     // views/. Detect via the current pathname rather than hard-coding either.
     const path = (window.location.pathname || '').toLowerCase();
-    return path.indexOf('/views/') >= 0 ? 'LoginPage.html' : 'views/LoginPage.html';
+    return path.indexOf('/views/') >= 0 ? '../LoginPage.html' : 'LoginPage.html';
 }
 
 function _clearAuthTokens() {

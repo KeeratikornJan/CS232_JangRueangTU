@@ -377,7 +377,7 @@ function createSimilarCasesModal() {
                 <button class="sim-nav-btn" id="simNextBtn" onclick="navigateSimilarCarousel(1)"><span class="material-symbols-outlined">chevron_right</span></button>
             </div>
             <div class="sim-dots-row" id="simDotsRow"></div>
-            <button class="sim-collapse-btn" id="simCollapseBtn" onclick="toggleSimilarDetail()">&#8744;</button>
+            <button class="sim-collapse-btn" id="simCollapseBtn" onclick="toggleSimilarDetail()"><span class="material-symbols-outlined">expand_more</span></button>
         </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) closeSimilarCasesModal(); });
@@ -416,7 +416,7 @@ function openSimilarCasesModal(sourceId) {
 
     _simDetailExpanded = true;
     document.getElementById('simCarouselWrap').classList.add('expanded');
-    document.getElementById('simCollapseBtn').innerHTML = '&#8744;';
+    document.getElementById('simCollapseBtn').innerHTML = '<span class="material-symbols-outlined">expand_more</span>';
     renderSimilarCarousel();
     document.getElementById('similarCasesModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -428,10 +428,10 @@ function toggleSimilarDetail() {
     const btn  = document.getElementById('simCollapseBtn');
     if (_simDetailExpanded) {
         wrap.classList.add('expanded');
-        btn.innerHTML = '&#8744;';
+        btn.innerHTML = '<span class="material-symbols-outlined">expand_more</span>';
     } else {
         wrap.classList.remove('expanded');
-        btn.innerHTML = '&#8743;';
+        btn.innerHTML = '<span class="material-symbols-outlined">expand_less</span>';
     }
 }
 
