@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ร้องเรียน - Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="icon" type="image/x-icon" href="../image/JangRueang.png"/>
+  <link rel="stylesheet" href="../css/layout-headerAdmin.css" />
+  <link rel="stylesheet" href="../css/complaintsAdmin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="LoginPage.html" class="topbar-left" style="text-decoration: none; color: white;">
+      <img
+        class="admin-avatar"
+        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop"
+        alt="admin avatar"
+        style="width: 35px; height: 35px;"
+      />
+      <span class="admin-name">พี่แอดมิน ใจดี</span>
+    </a>
+
+    <div class="topbar-center">
+      <div class="topbar-title">ร้องเรียน</div>
+    </div>
+
+    <div class="topbar-brand">
+      <a href="http://cs232-jangrueangtu-user.s3-website-us-east-1.amazonaws.com/index.html">
+          <img class="Logo"
+          src="../image/LOGO.png" 
+          alt="JangruengBlueLogo">
+      </a>
+    </div>
+  </header>
+
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-heading">ภาพรวม</div>
+        <a class="sidebar-link" href="../dashboardAdmin.html">
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">รับเรื่อง</div>
+
+        <a class="sidebar-link active" href="#">
+          <span>ร้องเรียน</span>
+          <span class="count-badge" id="sidebarComplaintCount">14</span>
+        </a>
+
+        <a class="sidebar-link" href="incidentAdmin.html">
+          <span>แจ้งเหตุ</span>
+          <span class="count-badge">16</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">จัดการ</div>
+        <a class="sidebar-link" href="forwardAdmin.html">
+          <span>ส่งต่อหน่วยงาน</span>
+        </a>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="content-card">
+        <div class="card-header">
+          <h1>รายการร้องเรียนทั้งหมด</h1>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-label">สถานะ :</span>
+
+            <button class="filter-btn blue active-filter" type="button" data-filter="ทั้งหมด">ทั้งหมด</button>
+            <button class="filter-btn red" type="button" data-filter="ใหม่">ใหม่</button>
+            <button class="filter-btn yellow" type="button" data-filter="กำลังดำเนิน">กำลังดำเนิน</button>
+            <button class="filter-btn green" type="button" data-filter="เสร็จสิ้น">เสร็จสิ้น</button>
+          </div>
+
+          <div class="toolbar-right">
+            <select class="category-select" id="categoryFilter">
+              <option value="ทั้งหมด">หมวดหมู่</option>
+              <option value="สถานที่">สถานที่</option>
+              <option value="บุคลากร">บุคลากร</option>
+              <option value="ระบบ IT">ระบบ IT</option>
+              <option value="รถโดยสาร">รถโดยสาร</option>
+              <option value="ร้านค้า">ร้านค้า</option>
+              <option value="อื่นๆ">อื่นๆ</option>
+              <option value="อุปกรณ์อิเล็กทรอนิกส์">อุปกรณ์อิเล็กทรอนิกส์</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="complaint-table">
+            <thead>
+              <tr>
+                <th class="col-id">หมายเลข</th>
+                <th class="col-title">หัวข้อ</th>
+                <th class="col-category">หมวดหมู่</th>
+                <th class="col-status">สถานะ</th>
+                <th class="col-time">ล่าสุด</th>
+              </tr>
+            </thead>
+            <tbody id="complaintTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/mockData.js"></script>
+  <script src="../js/admin.js"></script>
+  <script src="../js/complaintsAdmin.js"></script>
+</body>
+</html>

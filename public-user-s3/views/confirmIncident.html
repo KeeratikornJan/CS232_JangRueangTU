@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jangrueang TU - ตรวจสอบข้อมูลการแจ้งเหตุ</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/x-icon" href="../image/JangRueang.png"/>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <img src="../image/LOGO.png" alt="logo">
+        </div>
+        <nav>
+            <div class="nav-item ">
+                <a href="../index.html">
+                    <img src="../image/complaintpage.png" alt="icon" class="nav-icon">
+                    <span>ร้องเรียน</span>
+                </a>
+            </div>
+
+            <div class="nav-item active">
+                <a href="Incident.html">
+                    <img src="../image/informpage.png" alt="icon" class="nav-icon">
+                    <span>แจ้งเหตุ</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="confirm-container">
+        <header class="confirm-header">
+            <h1>ตรวจสอบข้อมูลการแจ้งเหตุ</h1>
+            <p>*กรุณาตรวจสอบความถูกต้องของข้อมูลก่อนส่งเรื่องแจ้งเหตุ</p>
+        </header>
+
+        <div class="main-card">
+            <div class="sub-card">
+                <h3>ข้อมูลผู้แจ้งเหตุ</h3>
+                <hr>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <img src="../image/person.png" alt="icon-user" class="icon-user">
+                        <strong>ชื่อ-นามสกุล :</strong>
+                        <span id="view-name"></span>
+                    </div>
+
+                    <div class="info-item">
+                        <img src="../image/mail.png" alt="icon-email" class="icon-user">
+                        <strong>อีเมล :</strong> <span id="view-email"></span>
+                    </div>
+                    <div class="info-item">
+                        <img src="../image/Phone.png" alt="icon-phone" class="icon-user">
+                        <strong>เบอร์มือถือ :</strong> <span id="view-phone"></span>
+                    </div>
+                    <div class="info-item">
+                        <img src="../image/card.png" alt="icon-card" class="icon-user">
+                        <strong>หมายเลขบัตรประชาชน :</strong> <span id="view-id-card"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-card">
+                <h3>ข้อมูลเรื่องแจ้งเหตุ</h3>
+                <hr>
+                <div class="complaint-details">
+                    <div class="complaint-item">
+                        <p><strong>หัวข้อแจ้งเหตุ: </strong> <span id="view-subject"></span></p>
+                    </div>
+                    <div class="complaint-item">
+                        <p><strong>วัน เวลา ที่เกิดเหตุ : </strong> <span id="view-datetime"></span></p>
+                    </div>
+                    <div class="complaint-item">
+                        <p><strong>สถานที่ที่เกิดเหตุ : </strong> <span id="view-location"></span></p>
+                        <div class="complaint-item">
+                            <p><strong>รายละเอียด : </strong> <span id="view-details"></span></p>
+                        </div>
+
+                        <div class="complaint-item">
+                            <strong>แนบรูป หรือ ไฟล์ :</strong>
+                            <span id="view-filename"></span>
+                            <div style="margin-top: 10px;">
+                                <img id="view-image" src="" style="display:none; max-width: 250px; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="button-group">
+                <button type="button" id="btn-confirm-submit" class="btn-confirm">ยืนยันการส่ง</button>
+                <button type="button" class="btn-cancel" onclick="history.back()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bottom-bar">
+        <div class="user-icon">
+            <img src="../image/login.png" alt="login-icon">
+        </div>
+    </footer>
+
+
+    <div id="success-popup" class="popup-overlay" >
+        <div class="popup-content">
+            <div class="icon-check">
+                <img src="../image/check-circle.png" alt="success"> 
+            </div>
+            <h2>ส่งเรื่องแจ้งเหตุเสร็จสิ้น</h2>
+            <p>รหัสเรื่องแจ้งเหตุ : <span id="complaint-id"> </span></p>
+            <p class="small">ติดตามสถานะเรื่องแจ้งเหตุของท่านผ่านทาง email</p>
+            <button type="button" id="btn-close-popup" class="btn-confirm">ตกลง</button>
+        </div>
+    </div>
+    <script src="../js/config.js"></script>
+    <script src="../js/confirmIncident.js"></script>
+</body>
+
+</html>

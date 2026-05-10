@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jangrueang TU - แจ้งเหตุ</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="icon" type="image/x-icon" href="../image/JangRueang.png"/>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <img src="../image/LOGO.png" alt="logo">
+        </div>
+        <nav>
+            <div class="nav-item ">
+                <a href="../index.html">
+                    <img src="../image/complaintpage.png" alt="icon" class="nav-icon">
+                    <span>ร้องเรียน</span>
+                </a>
+            </div>
+
+            <div class="nav-item active">
+                <a href="Incident.html">
+                    <img src="../image/informpage.png" alt="icon" class="nav-icon">
+                    <span>แจ้งเหตุ</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <h1>แจ้งเหตุ</h1>
+    <main class="container">
+        <form id="complaintForm">
+            <section class="form-card">
+                <h3>ข้อมูลผู้เเจ้งเหตุ</h3>
+                <div class="grid-row">
+                    <div class="form-group">
+                        <div class="label-wrapper">
+                            <img src="../image/person.png" alt="icon-user" class="icon-user">
+                            <label>ชื่อ</label>
+                        </div>
+                        <input type="text" name="firstname" placeholder="ชื่อ" required>
+                    </div>
+                    <div class="form-group">
+                        <label id="lastname">สกุล</label>
+                        <input type="text" name="lastname" id="input-lastname" placeholder="นามสกุล" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <img src="../image/mail.png" alt="icon-email" class="icon-user">
+                        <label>อีเมล</label>
+                    </div>
+                    <input type="email" name="email" placeholder="อีเมล" required>
+                </div>
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <img src="../image/Phone.png" alt="icon-phone" class="icon-user">
+                        <label>เบอร์มือถือ</label>
+                    </div>
+                    <input type="tel" name="phone" placeholder="เบอร์มือถือ" required>
+                </div>
+                <div class="form-group">
+                    <div class="label-wrapper">
+                        <img src="../image/card.png" alt="icon-card" class="icon-user">
+                        <label>หมายเลขบัตรประชาชน</label>
+                    </div>
+                    <input type="text" name="id_card" placeholder="หมายเลขบัตรประชาชน" maxlength="13" required>
+                </div>
+            </section>
+
+            <section class="form-card">
+                <h3>ข้อมูลแจ้งเหตุ</h3>
+                <div class="form-group">
+                    <label class="info">หัวข้อแจ้งเหตุ</label>
+                    <input type="text" name="subject" class="input-small" required>
+                </div>
+                <div class="form-group">
+                    <label class="info">วัน เวลา ที่เกิดเหตุ</label>
+                    <input type="datetime-local" name="event_time" class="input-small" required>
+                </div>
+                <div class="form-group">
+                    <label class="info">สถานที่เกิดเหตุ</label>
+                    <div class="input-with-icon-container">
+                        <input type="text" name="location" class="input-location" required>
+                        <div class="location-icon">
+                            <img src="../image/Map_pin.png" alt="location-icon">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="info">รายละเอียด</label>
+                    <textarea name="details" rows="5" required></textarea>
+                </div>
+
+                <div class="file-upload-group">
+                    <label class="info">แนบรูป หรือ ไฟล์</label>
+
+                    <input type="file" id="file-input" name="evidence" accept="image/*">
+                    <div style="width: 100%; height: 0; clear: both;"></div>
+
+                    <div id="preview-container" style="display: none;">
+                        <img id="image-preview" src="">
+                        <button type="button" id="btn-remove-file">✕</button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="submit-area">
+                <button type="submit" class="btn-submit">ส่งเรื่อง</button>
+            </div>
+        </form>
+    </main>
+
+    <footer class="bottom-bar">
+        <div class="user-icon">
+            <img src="../image/login.png" alt="login-icon">
+        </div>
+    </footer>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/Incident.js"></script>
+</body>
+
+</html>

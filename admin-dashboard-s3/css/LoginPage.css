@@ -1,0 +1,360 @@
+:root {
+  /* Colors */
+  --color-primary:       #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-shadow: rgba(37, 99, 235, 0.35);
+  --color-primary-focus:  rgba(37, 99, 235, 0.12);
+  --color-accent-red:    #ef4444;
+
+  --color-text:          #1e293b;
+  --color-text-muted:    #64748b;
+  --color-icon:          #94a3b8;
+  --color-border:        #e2e8f0;
+  --color-input-bg:      #f8fafc;
+  --color-page-bg:       #f1f5f9;
+  --color-white:         #ffffff;
+
+  /* Typography */
+  --font-family-base: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+
+  /* Spacing */
+  --space-xs:  8px;
+  --space-sm:  12px;
+  --space-md:  20px;
+  --space-lg:  36px;
+  --space-xl:  56px;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 40px;
+
+  /* Shadows */
+  --shadow-panel: 8px 0 40px rgba(0, 0, 0, 0.08);
+  --shadow-btn:   0 4px 14px var(--color-primary-shadow);
+  --shadow-btn-hover: 0 6px 20px rgba(37, 99, 235, 0.4);
+
+  /* Transitions */
+  --transition-fast:   0.2s ease;
+  --transition-spring: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   2. CSS Reset / Base
+──────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+  font-family: var(--font-family-base);
+  background: var(--color-page-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   3. Animations
+──────────────────────────────────────────────────────────── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   4. Layout – Login Panel (Left)
+──────────────────────────────────────────────────────────── */
+.LoginLogo {
+  display: block;
+  width: 340px;
+  margin: 0 auto 16px;
+  margin-bottom: 100px;
+}
+
+.login-panel {
+  flex: 0 0 520px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--color-white);
+  padding: 60px var(--space-xl);
+  position: relative;
+  z-index: 2;
+  box-shadow: var(--shadow-panel);
+  animation: slideIn var(--transition-spring) both;
+}
+
+.login-panel__form-wrap {
+  width: 100%;
+  max-width: 340px;
+}
+
+.login-panel__heading {
+  display: flex;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 40px;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   5. Form Field
+──────────────────────────────────────────────────────────── */
+.form-field {
+  margin-bottom: var(--space-md);
+}
+
+.form-field__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.form-field__input-wrap {
+  position: relative;
+}
+
+.form-field__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-icon);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.form-field__input {
+  width: 100%;
+  padding: 11px 42px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-input-bg);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow   var(--transition-fast),
+    background   var(--transition-fast);
+}
+
+.form-field__input:focus {
+  border-color: var(--color-primary);
+  background: var(--color-white);
+  box-shadow: 0 0 0 3px var(--color-primary-focus);
+}
+
+/* Toggle password visibility button */
+.form-field__toggle-pw {
+  position: absolute;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-icon);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color var(--transition-fast);
+}
+
+.form-field__toggle-pw:hover {
+  color: var(--color-primary);
+}
+
+/* Icon visibility states – toggled via JS (aria-pressed) */
+.form-field__toggle-pw .icon-eye {
+  display: none;
+}
+
+.form-field__toggle-pw[aria-pressed="true"] .icon-eye-off {
+  display: none;
+}
+
+.form-field__toggle-pw[aria-pressed="true"] .icon-eye {
+  display: block;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   6. Login Form – Options Row
+──────────────────────────────────────────────────────────── */
+.login-form__options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 26px;
+}
+
+.login-form__remember {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--color-text-muted);
+}
+
+.login-form__remember input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.login-form__forgot {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.login-form__forgot:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   7. Submit Button
+──────────────────────────────────────────────────────────── */
+.btn-login {
+  display: flex;
+  width: 100%;   /* แก้จาก 340px */
+  padding: 13px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  justify-content: center;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: var(--shadow-btn);
+  transition:
+    background  var(--transition-fast),
+    box-shadow  var(--transition-fast),
+    transform   0.1s ease;
+}
+
+/* ซ่อน native password toggle ของ Chrome/Edge */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-contacts-auto-fill-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none;
+  pointer-events: none;
+}
+
+.btn-login:hover {
+  background: var(--color-primary-hover);
+  box-shadow: var(--shadow-btn-hover);
+}
+
+.btn-login:active {
+  transform: scale(0.98);
+}
+
+.btn-login:focus-visible {
+  outline: 3px solid var(--color-primary-focus);
+  outline-offset: 2px;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   8. Layout – Hero Panel (Right)
+──────────────────────────────────────────────────────────── */
+.hero-panel {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.8s 0.2s ease both;
+}
+
+.hero-panel__bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.55) saturate(0.8);
+}
+
+/* Dark overlay gradient */
+.hero-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.55) 0%,
+    rgba(15, 23, 42, 0.25) 60%,
+    transparent 100%
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+   10. Responsive – Mobile
+──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;
+  }
+
+  .login-panel {
+    flex: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 48px 28px;
+  }
+
+  .hero-panel {
+    flex: none;
+    min-height: 220px;
+  }
+
+  .brand {
+    bottom: 24px;
+    left: 24px;
+  }
+}

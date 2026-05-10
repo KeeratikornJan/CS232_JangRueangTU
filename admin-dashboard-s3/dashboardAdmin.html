@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Admin</title>
+  <link rel="icon" type="image/x-icon" href="image/JangRueang.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="css/dashboardAdmin.css" />
+  <link rel="stylesheet" href="css/layout-headerAdmin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="views/LoginPage.html" class="topbar-left" style="text-decoration: none; color: white;">
+      <img
+        class="admin-avatar"
+        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop"
+        alt="admin avatar"
+        style="width: 35px; height: 35px;"
+      />
+      <span class="admin-name">พี่แอดมิน ใจดี</span>
+    </a>
+
+    <div class="topbar-center">
+      <div class="topbar-title">Dashboard</div>
+    </div>
+
+    <div class="topbar-brand">
+        <a href="http://cs232-jangrueangtu-user.s3-website-us-east-1.amazonaws.com/index.html">
+            <img class="Logo"
+            src="image/LOGO.png" 
+            alt="JangruengBlueLogo">
+        </a>
+    </div>
+  </header>
+
+  <div class="page-layout">
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-heading">ภาพรวม</div>
+        <a class="sidebar-link active" href="#">
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">รับเรื่อง</div>
+
+        <a class="sidebar-link" href="views/complaintsAdmin.html">
+          <span>ร้องเรียน</span>
+          <span class="count-badge">14</span>
+        </a>
+
+        <a class="sidebar-link" href="views/incidentAdmin.html">
+          <span>แจ้งเหตุ</span>
+          <span class="count-badge">16</span>
+        </a>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-heading">จัดการ</div>
+        <a class="sidebar-link" href="views/forwardAdmin.html">
+          <span>ส่งต่อหน่วยงาน</span>
+        </a>
+      </div>
+    </aside>
+
+    <main class="content dashboard-content">
+      <h1 class="dashboard-title">แนวโน้มสถิติ</h1>
+
+      <section class="dashboard-top">
+        <div class="chart-card">
+          <div class="pie-area">
+            <svg id="pieSvg" class="pie-svg" viewBox="0 0 520 340" aria-label="pie chart"></svg>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <div class="category-card-title">หมวดหมู่</div>
+          <div class="category-list" id="categoryList"></div>
+        </div>
+      </section>
+
+      <section class="summary-cards" id="summaryCards"></section>
+
+      <section class="feed-card">
+        <div class="feed-toolbar">
+          <button class="toolbar-btn" id="feedSortBtn" type="button">⇅ <span>ล่าสุด</span></button>
+        </div>
+
+        <div class="feed-list" id="feedList"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- overlay รวมเคสใกล้เคียง (JS renders inner content) -->
+  <section id="similarCasesOverlay" class="similar-cases-overlay hidden">
+    <div class="similar-cases-panel" id="similarCasesPanel"></div>
+  </section>
+
+  <script src="js/mockData.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/dashboardAdmin.js"></script>
+</body>
+</html>
