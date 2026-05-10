@@ -38,6 +38,13 @@
 
 ---
 
+## Documents สำคัญต่างๆ
+- [Contributing_Document](./CONTRIBUTING.md)
+- [Deployment_Note](./docs/Deployment_Note.md)
+- [API_Document](./docs/API_Documentation.md)
+
+---
+
 ## ผู้จัดทำ
 
 โปรเจกต์วิชา **CS232 — Cloud Computing** กลุ่มตัว อ.
