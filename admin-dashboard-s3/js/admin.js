@@ -159,6 +159,28 @@ function setCaseImage(img, url) {
     img.src = url || "";
 }
 
+function findSimilarCases(currentItem, allItems) {
+    const catOk  = currentItem.category && currentItem.category !== '-' && currentItem.category !== 'อื่นๆ';
+    const locOk  = currentItem.location && currentItem.location !== '-';
+    const dateCur = currentItem.incidentDate && currentItem.incidentDate !== '-' ? currentItem.incidentDate : null;
+
+    return allItems
+        .filter(item => {
+            if (item.id === currentItem.id) return false;
+            const sameCat  = catOk && item.category === currentItem.category;
+            const sameLoc  = locOk && item.location && item.location !== '-' && item.location === currentItem.location;
+            const dateItem = item.incidentDate && item.incidentDate !== '-' ? item.incidentDate : null;
+            const sameDate = !dateCur || !dateItem || dateCur === dateItem;
+            return sameCat && sameLoc && sameDate;
+        })
+        .sort((a, b) => {
+            const tA = new Date(a.eventTimestamp || a.timestamp || 0).getTime();
+            const tB = new Date(b.eventTimestamp || b.timestamp || 0).getTime();
+            return tB - tA;
+        })
+        .slice(0, 5);
+}
+
 document.addEventListener('DOMContentLoaded', refreshSidebarCounts);
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('img.popup-image, img[data-case-image]').forEach(applyImageCorsAttrs);
