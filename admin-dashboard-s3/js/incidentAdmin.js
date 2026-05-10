@@ -103,6 +103,22 @@ function openPopup(item) {
         popupImage.style.display = "none";
         popupImagePlaceholder.style.display = "flex";
     }
+    const similar = findSimilarCases(item, incidents);
+    const simSection = document.getElementById('similarCasesSection');
+    const simList = document.getElementById('similarCasesList');
+    if (simSection && simList) {
+        if (similar.length) {
+            simList.innerHTML = similar.map(s => `
+                <div class="similar-case-row">
+                    <span class="similar-case-id">${s.id}</span>
+                    <span class="similar-case-title">${s.title}</span>
+                    <span class="status-pill ${getStatusClass(s.status)}">${getStatusLabel(s.status)}</span>
+                </div>`).join('');
+            simSection.style.display = '';
+        } else {
+            simSection.style.display = 'none';
+        }
+    }
     incidentPopup.classList.add("show");
     popupOverlay.classList.add("show");
     incidentPopup.setAttribute("aria-hidden", "false");
@@ -225,6 +241,11 @@ function createPopup() {
           <div class="popup-image-box">
             <img id="popupImage" class="popup-image" src="" alt="incident image" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <div class="popup-image-placeholder" id="popupImagePlaceholder"><span class="popup-image-icon">🖼️</span></div>
+          </div>
+          <div class="popup-section similar-cases-section" id="similarCasesSection" style="display:none;">
+            <div class="popup-section-label">เคสที่เกี่ยวข้อง</div>
+            <div class="popup-divider" style="margin:6px 0 10px;"></div>
+            <div id="similarCasesList"></div>
           </div>
           <div class="popup-form-card">
             <label class="popup-form-label" for="popupDepartmentSelect">มอบหมายหน่วยงาน</label>
