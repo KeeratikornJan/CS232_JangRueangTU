@@ -3,8 +3,17 @@ let DASHBOARD_CASES = [];
 let feedCases     = [];
 let feedSortOrder = 'latest';
 
+let _similarCases = [];
+let _similarCarouselIdx = 0;
+let _simDetailExpanded = true;
+let _simSlideDir = 0; // -1 = prev (slide from left), 1 = next (slide from right)
+
+const THAI_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                     'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
 document.addEventListener('DOMContentLoaded', () => {
     createCaseDetailPopup();
+    createSimilarCasesModal();
     fetchDashboardData();
 
     document.getElementById('feedSortBtn').addEventListener('click', () => {
@@ -160,6 +169,39 @@ function pieCoords(percent, cx, cy, r) {
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
 }
 
+function eventDate(item) {
+    const raw = item.event_time || '';
+    const d = raw.split('T')[0];
+    return d.length >= 8 ? d : null;
+}
+
+function isSimilarRaw(source, other) {
+    if (source === other) return false;
+    const srcId = caseId(source);
+    const othId = caseId(other);
+    if (srcId === othId) return false;
+
+    const cat = source.category || 'อื่นๆ';
+    const loc = source.location || '-';
+    const catOk = cat !== 'อื่นๆ' && cat !== '';
+    const locOk = loc !== '-' && loc !== '';
+
+    const otherCat = other.category || 'อื่นๆ';
+    const otherLoc = other.location || '-';
+    const sameCat  = catOk && otherCat === cat;
+    const sameLoc  = locOk && otherLoc !== '-' && otherLoc === loc;
+
+    const dA = eventDate(source);
+    const dB = eventDate(other);
+    const sameDate = !dA || !dB || dA === dB;
+
+    return sameCat && sameLoc && sameDate;
+}
+
+function countSimilarRaw(rawItem, allRaw) {
+    return allRaw.filter(other => other !== rawItem && isSimilarRaw(rawItem, other)).length;
+}
+
 function renderLatestCases(cases) {
     const feedList = document.getElementById('feedList');
     if (!feedList) return;
@@ -183,6 +225,11 @@ function renderLatestCases(cases) {
         const tagCssClass = CATEGORY_CLASS_MAP[cat] || "tag-category7";
         const tagsHtml = `<span class="feed-tag ${tagCssClass}">${cat}</span>`;
 
+        const similarCount = countSimilarRaw(item, DASHBOARD_CASES);
+        const alertHtml = similarCount > 0
+            ? `<span class="alert-chip" onclick="event.stopPropagation();openSimilarCasesModal('${id}')"><span class="alert-icon">⚠</span>พบเคสซ้ำ<span class="alert-badge">${similarCount}</span></span>`
+            : '';
+
         return `
         <div class="feed-row" style="cursor: pointer;" onclick="viewDetail('${id}')">
           <div class="feed-side ${sideColor}"></div>
@@ -191,7 +238,7 @@ function renderLatestCases(cases) {
             <div class="feed-code">${id}</div>
             <div class="feed-tags">${tagsHtml}</div>
           </div>
-          <div class="feed-alert"></div>
+          <div class="feed-alert">${alertHtml}</div>
           <div class="feed-time">${ts}</div>
         </div>`;
     }).join('');
@@ -304,4 +351,201 @@ function closeCaseDetail() {
     document.getElementById('caseDetailPopup').classList.remove('show');
     document.getElementById('caseDetailOverlay').classList.remove('show');
     document.body.style.overflow = '';
+}
+
+// ─── Similar Cases Modal ───────────────────────────────────────────────────
+
+function createSimilarCasesModal() {
+    const overlay = document.createElement('div');
+    overlay.id = 'similarCasesModal';
+    overlay.className = 'sim-modal-overlay';
+    overlay.innerHTML = `
+        <div class="sim-modal" id="simModalBox">
+            <div class="sim-modal-header">
+                <div class="sim-modal-title">รวมเคสใกล้เคียง</div>
+                <button class="sim-close-btn" onclick="closeSimilarCasesModal()">&#215;</button>
+            </div>
+            <div class="sim-summary-bar" id="simSummaryBar"></div>
+            <div class="sim-content-area">
+                <button class="sim-nav-btn" id="simPrevBtn" onclick="navigateSimilarCarousel(-1)"><span class="material-symbols-outlined">chevron_left</span></button>
+                <div class="sim-center-col">
+                    <div class="sim-source-row" id="simSourceRow"></div>
+                    <div class="sim-carousel-wrap" id="simCarouselWrap">
+                        <div class="sim-carousel-track" id="simCarouselTrack"></div>
+                    </div>
+                </div>
+                <button class="sim-nav-btn" id="simNextBtn" onclick="navigateSimilarCarousel(1)"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+            <div class="sim-dots-row" id="simDotsRow"></div>
+            <button class="sim-collapse-btn" id="simCollapseBtn" onclick="toggleSimilarDetail()">&#8744;</button>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeSimilarCasesModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSimilarCasesModal(); });
+}
+
+function openSimilarCasesModal(sourceId) {
+    const source = DASHBOARD_CASES.find(i => caseId(i) === sourceId);
+    if (!source) return;
+
+    const matched = DASHBOARD_CASES
+        .filter(other => other !== source && isSimilarRaw(source, other))
+        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+    if (!matched.length) return;
+
+    _similarCases = [source, ...matched];
+
+    _similarCarouselIdx = 0;
+    _simSlideDir = 0;
+
+    const cat = source.category || 'อื่นๆ';
+    const loc = source.location || '-';
+    const monthYear = (() => {
+        const d = new Date((source.timestamp || '').split('.')[0]);
+        if (isNaN(d.getTime())) return '-';
+        return `เดือน ${THAI_MONTHS[d.getMonth()]} ปี ${d.getFullYear() + 543}`;
+    })();
+
+    document.getElementById('simSummaryBar').innerHTML = `
+        <div class="sim-count-circle">${_similarCases.length}</div>
+        <span class="sim-bar-label">จำนวนที่พบเคสอาจซ้ำซ้อน</span>
+        <span class="sim-bar-cat">หมวดหมู่ ${cat}</span>
+        <span class="sim-bar-loc">📍 ${loc}</span>
+        <span class="sim-bar-month">${monthYear}</span>`;
+
+    _simDetailExpanded = true;
+    document.getElementById('simCarouselWrap').classList.add('expanded');
+    document.getElementById('simCollapseBtn').innerHTML = '&#8744;';
+    renderSimilarCarousel();
+    document.getElementById('similarCasesModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function toggleSimilarDetail() {
+    _simDetailExpanded = !_simDetailExpanded;
+    const wrap = document.getElementById('simCarouselWrap');
+    const btn  = document.getElementById('simCollapseBtn');
+    if (_simDetailExpanded) {
+        wrap.classList.add('expanded');
+        btn.innerHTML = '&#8744;';
+    } else {
+        wrap.classList.remove('expanded');
+        btn.innerHTML = '&#8743;';
+    }
+}
+
+function closeSimilarCasesModal() {
+    document.getElementById('similarCasesModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function navigateSimilarCarousel(dir) {
+    const next = _similarCarouselIdx + dir;
+    if (next >= 0 && next < _similarCases.length) {
+        _simSlideDir = dir > 0 ? 1 : -1;
+        _similarCarouselIdx = next;
+        renderSimilarCarousel();
+    }
+}
+
+function goToSimilarCase(idx) {
+    _simSlideDir = idx > _similarCarouselIdx ? 1 : -1;
+    _similarCarouselIdx = idx;
+    if (!_simDetailExpanded) toggleSimilarDetail();
+    renderSimilarCarousel();
+}
+
+function renderSimilarCarousel() {
+    const track = document.getElementById('simCarouselTrack');
+    const dots  = document.getElementById('simDotsRow');
+    const prev  = document.getElementById('simPrevBtn');
+    const next  = document.getElementById('simNextBtn');
+
+    if (!_similarCases.length) {
+        track.innerHTML = '<div class="sim-empty">ไม่พบเคสที่เกี่ยวข้อง</div>';
+        dots.innerHTML = '';
+        prev.style.visibility = next.style.visibility = 'hidden';
+        return;
+    }
+
+    const item = _similarCases[_similarCarouselIdx];
+    const incidentDate = item.event_time ? item.event_time.split('T')[0] : '-';
+    const incidentTime = item.event_time && item.event_time.includes('T') ? item.event_time.split('T')[1] : '-';
+    const name = item.fullname || `${item.firstname || ''} ${item.lastname || ''}`.trim() || '-';
+    const imageUrl = item.image_url_presigned || item.image_url || '';
+
+    track.innerHTML = `
+        <div class="sim-case-card">
+            <div class="sim-card-left">
+                <div class="sim-card-group">
+                    <div class="sim-card-label">หัวข้อ</div>
+                    <div class="sim-card-value sim-bold">${item.subject || '-'}</div>
+                </div>
+                <div class="sim-card-group">
+                    <div class="sim-card-label">รายละเอียด</div>
+                    <div class="sim-card-value">${item.details || '-'}</div>
+                </div>
+                <div class="sim-card-group">
+                    <div class="sim-card-label">ผู้แจ้ง</div>
+                    <div class="sim-card-value">
+                        <div><span class="sim-strong">ชื่อ-สกุล :</span> ${name}</div>
+                        <div><span class="sim-strong">Email :</span> ${item.email || '-'}</div>
+                        <div><span class="sim-strong">หมายเลขบัตรประชาชน :</span> ${item.id_card || '-'}</div>
+                        <div><span class="sim-strong">เบอร์มือถือ :</span> ${item.phone || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="sim-card-right">
+                <div class="sim-card-group">
+                    <div class="sim-card-label">ข้อมูลแจ้งเหตุ</div>
+                    <div class="sim-card-value">
+                        <div><span class="sim-strong">วันที่เกิดเหตุ :</span> ${incidentDate}</div>
+                        <div><span class="sim-strong">เวลาที่เกิดเหตุ :</span> ${incidentTime}</div>
+                    </div>
+                </div>
+                <div class="sim-img-box">
+                    ${imageUrl
+                        ? `<img src="${imageUrl}" class="sim-img" crossorigin="anonymous" referrerpolicy="no-referrer" alt="case image" />`
+                        : `<div class="sim-img-placeholder">🖼️</div>`}
+                </div>
+            </div>
+        </div>`;
+
+    dots.innerHTML = _similarCases.map((_, i) =>
+        `<button class="sim-dot${i === _similarCarouselIdx ? ' active' : ''}" onclick="goToSimilarCase(${i})"></button>`
+    ).join('');
+
+    prev.style.visibility = _similarCarouselIdx > 0 ? 'visible' : 'hidden';
+    next.style.visibility = _similarCarouselIdx < _similarCases.length - 1 ? 'visible' : 'hidden';
+
+    const sourceRow = document.getElementById('simSourceRow');
+    if (sourceRow) {
+        const sStatus = (item.status || '').toLowerCase();
+        const sSide = ['pending','รอดำเนินการ','ใหม่',''].includes(sStatus) ? 'side-red'
+            : ['in_progress','กำลังดำเนินการ'].includes(sStatus) ? 'side-yellow' : 'side-green';
+        const sTag = CATEGORY_CLASS_MAP[item.category || ''] || 'tag-category7';
+        const sTs  = item.timestamp ? formatTimestamp(item.timestamp) : '';
+        sourceRow.innerHTML = `
+            <div class="feed-row sim-source-feed">
+                <div class="feed-side ${sSide}"></div>
+                <div class="feed-main">
+                    <div class="feed-title">${item.subject || '-'}</div>
+                    <div class="feed-code">${caseId(item)}</div>
+                    <div class="feed-tags"><span class="feed-tag ${sTag}">${item.category || ''}</span></div>
+                </div>
+                <div class="feed-alert"></div>
+                <div class="feed-time">${sTs}</div>
+            </div>`;
+    }
+
+    if (_simSlideDir !== 0) {
+        const slideClass = _simSlideDir > 0 ? 'sim-slide-right' : 'sim-slide-left';
+        track.classList.remove('sim-slide-left', 'sim-slide-right');
+        if (sourceRow) sourceRow.classList.remove('sim-slide-left', 'sim-slide-right');
+        void track.offsetWidth;
+        track.classList.add(slideClass);
+        if (sourceRow) sourceRow.classList.add(slideClass);
+        _simSlideDir = 0;
+    }
 }

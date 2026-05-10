@@ -314,3 +314,29 @@
 }
 .popup-btn-success { flex: 1; background: #538759; }
 .popup-btn-danger  { width: 160px; background: #e4443e; }
+
+/* ===== เคสที่เกี่ยวข้อง ===== */
+.similar-case-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f4f6fa;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.similar-case-id {
+  font-weight: 700;
+  color: #3f79d0;
+  white-space: nowrap;
+  min-width: 90px;
+}
+
+.similar-case-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
